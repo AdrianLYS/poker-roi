@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Poker ROI 管理員後台</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <style>
+    :root{
+      --bg:#202225;
+      --panel:#2a2d31;
+      --line:#41454b;
+      --text:#f8fafc;
+      --muted:#a8adb5;
+      --accent:#60a5fa;
+      --good:#34d399;
+      --bad:#fb7185;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(255,255,255,.055),transparent 32%),
+        radial-gradient(circle at 85% 15%,rgba(255,255,255,.035),transparent 28%),
+        linear-gradient(145deg,#25272a 0%,#1d1f22 48%,#242629 100%);
+      min-height:100vh;
+    }
+    .wrap{max-width:1280px;margin:auto;padding:22px 14px 70px}
+    .top,.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    h1{margin:0;font-size:26px}
+    h2{margin:0 0 14px;font-size:18px}
+    .muted{color:var(--muted);font-size:13px}
+    .panel{
+      background:rgba(42,45,49,.94);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      margin-top:14px;
+      box-shadow:0 12px 34px rgba(0,0,0,.18);
+    }
+    .auth{display:flex;gap:8px;flex-wrap:wrap}
+    input,select,button{
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:10px 12px;
+      background:#202328;
+      color:var(--text);
+      font:inherit;
+    }
+    input{min-width:220px}
+    button{cursor:pointer;font-weight:700}
+    button.primary{background:#2563eb;border-color:#2563eb}
+    button.secondary{background:#34383e}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .hidden{display:none!important}
+    .pill{
+      display:inline-flex;align-items:center;
+      padding:7px 10px;border:1px solid var(--line);
+      border-radius:999px;color:var(--muted);font-size:12px
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+    .stat{
+      background:rgba(42,45,49,.94);
+      border:1px solid var(--line);
+      border-radius:14px;padding:14px
+    }
+    .stat .label{color:var(--muted);font-size:12px}
+    .stat .value{font-size:22px;font-weight:800;margin-top:7px}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;white-space:nowrap}
+    th{color:var(--muted)}
+    tr.clickable{cursor:pointer}
+    tr.clickable:hover{background:rgba(255,255,255,.035)}
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .selected-info{font-weight:700}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
+    .footer{margin-top:24px;text-align:center;color:var(--muted);font-size:12px}
+    @media(max-width:850px){
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      h1{font-size:22px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>♠ Poker ROI 管理員後台</h1>
+      <div class="muted">僅限已授權管理員使用</div>
+    </div>
+    <div>
+      <span class="pill" id="adminState">未登入</span>
+      <button class="secondary hidden" id="logoutBtn" onclick="logout()">登出</button>
+    </div>
+  </div>
+
+  <div class="panel" id="loginPanel">
+    <h2>管理員登入</h2>
+    <div class="auth">
+      <input id="email" type="email" placeholder="管理員 Email" autocomplete="email">
+      <input id="password" type="password" placeholder="密碼" autocomplete="current-password" onkeydown="if(event.key==='Enter') login()">
+      <button class="primary" id="loginBtn" onclick="login()">登入</button>
+    </div>
+    <div class="muted" style="margin-top:10px">
+      使用與一般網站相同的 Supabase Email + 密碼帳號登入。
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="stats">
+      <div class="stat"><div class="label">註冊玩家</div><div class="value" id="totalUsers">0</div></div>
+      <div class="stat"><div class="label">總參賽／紀錄</div><div class="value" id="totalSessions">0</div></div>
+      <div class="stat"><div class="label">總 Buy-in（TWD）</div><div class="value" id="totalBuyin">0</div></div>
+      <div class="stat"><div class="label">總盈虧（TWD）</div><div class="value" id="totalProfit">0</div></div>
+      <div class="stat"><div class="label">整體 ROI</div><div class="value" id="totalRoi">0%</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div>
+          <h2>玩家列表</h2>
+          <div class="muted">點擊玩家即可查看他的全部紀錄</div>
+        </div>
+        <button class="secondary" onclick="loadUsers()">重新整理</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>註冊時間</th>
+              <th>最後登入</th>
+              <th>紀錄數</th>
+              <th>Buy-in TWD</th>
+              <th>Cash out TWD</th>
+              <th>盈虧 TWD</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div>
+          <h2>玩家紀錄</h2>
+          <div class="selected-info" id="selectedUser">請先點選上方玩家</div>
+        </div>
+        <button class="secondary hidden" id="showAllBtn" onclick="loadSessions(null,'全部玩家')">查看全部紀錄</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>類型</th>
+              <th>大賽</th>
+              <th>賽事</th>
+              <th>幣別</th>
+              <th>Buy-in</th>
+              <th>Cash out</th>
+              <th>盈虧</th>
+              <th>盈虧 TWD</th>
+              <th>地點</th>
+              <th>備註</th>
+            </tr>
+          </thead>
+          <tbody id="sessionsBody">
+            <tr><td colspan="11" class="empty">尚未選擇玩家</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Designed &amp; Developed by Adrian Lam</div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const configured =
+    window.APP_CONFIG &&
+    APP_CONFIG.SUPABASE_URL &&
+    APP_CONFIG.SUPABASE_ANON_KEY;
+
+  let sb = null;
+  let session = null;
+  let users = [];
+
+  const money = n =>
+    new Intl.NumberFormat("zh-TW",{maximumFractionDigits:0})
+      .format(Number(n||0));
+
+  const dt = value =>
+    value ? new Date(value).toLocaleString("zh-TW") : "—";
+
+  const esc = value =>
+    String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  async function init(){
+    if(!configured){
+      alert("找不到 config.js 的 Supabase 設定。");
+      return;
+    }
+
+    sb = supabase.createClient(
+      APP_CONFIG.SUPABASE_URL,
+      APP_CONFIG.SUPABASE_ANON_KEY
+    );
+
+    const {data} = await sb.auth.getSession();
+    session = data.session;
+    await applyAuth();
+
+    sb.auth.onAuthStateChange(async(_,newSession)=>{
+      session = newSession;
+      await applyAuth();
+    });
+  }
+
+  async function applyAuth(){
+    if(!session){
+      $("loginPanel").classList.remove("hidden");
+      $("dashboard").classList.add("hidden");
+      $("logoutBtn").classList.add("hidden");
+      $("adminState").textContent = "未登入";
+      return;
+    }
+
+    const {data,isError,error} = await sb.rpc("is_poker_admin");
+    if(error || data !== true){
+      $("adminState").textContent = "非管理員";
+      $("dashboard").classList.add("hidden");
+      $("loginPanel").classList.add("hidden");
+      $("logoutBtn").classList.remove("hidden");
+      alert("此帳號沒有管理員權限。");
+      return;
+    }
+
+    $("adminState").textContent = session.user.email;
+    $("loginPanel").classList.add("hidden");
+    $("dashboard").classList.remove("hidden");
+    $("logoutBtn").classList.remove("hidden");
+    $("showAllBtn").classList.remove("hidden");
+    await loadUsers();
+  }
+
+  async function login(){
+    const email = $("email").value.trim();
+    const password = $("password").value;
+
+    if(!email || !password){
+      alert("請輸入 Email 和密碼。");
+      return;
+    }
+
+    $("loginBtn").disabled = true;
+    $("loginBtn").textContent = "登入中...";
+
+    const {error} = await sb.auth.signInWithPassword({email,password});
+
+    $("loginBtn").disabled = false;
+    $("loginBtn").textContent = "登入";
+
+    if(error){
+      alert(error.message);
+      return;
+    }
+
+    $("password").value = "";
+  }
+
+  async function logout(){
+    await sb.auth.signOut();
+  }
+
+  async function loadUsers(){
+    const {data,error} = await sb.rpc("admin_list_users");
+    if(error){
+      alert("讀取玩家失敗：" + error.message);
+      return;
+    }
+
+    users = data || [];
+    renderUsers();
+    renderSummary();
+  }
+
+  function renderSummary(){
+    const sessions = users.reduce((s,u)=>s+Number(u.total_sessions||0),0);
+    const buyin = users.reduce((s,u)=>s+Number(u.total_buyin_twd||0),0);
+    const profit = users.reduce((s,u)=>s+Number(u.total_profit_twd||0),0);
+    const roi = buyin ? profit / buyin * 100 : 0;
+
+    $("totalUsers").textContent = users.length;
+    $("totalSessions").textContent = sessions;
+    $("totalBuyin").textContent = money(buyin);
+    $("totalProfit").textContent = money(profit);
+    $("totalProfit").className = "value " + (profit>=0?"good":"bad");
+    $("totalRoi").textContent = roi.toFixed(2) + "%";
+    $("totalRoi").className = "value " + (roi>=0?"good":"bad");
+  }
+
+  function renderUsers(){
+    const body = $("usersBody");
+
+    if(!users.length){
+      body.innerHTML = '<tr><td colspan="8" class="empty">目前沒有註冊玩家</td></tr>';
+      return;
+    }
+
+    body.innerHTML = users.map(u=>{
+      const p = Number(u.total_profit_twd||0);
+      const r = Number(u.roi_percent||0);
+      return `
+        <tr class="clickable" onclick='loadSessions(${JSON.stringify(u.user_id)},${JSON.stringify(u.email)})'>
+          <td>${esc(u.email)}</td>
+          <td>${esc(dt(u.registered_at))}</td>
+          <td>${esc(dt(u.last_sign_in_at))}</td>
+          <td>${Number(u.total_sessions||0)}</td>
+          <td>${money(u.total_buyin_twd)}</td>
+          <td>${money(u.total_cashout_twd)}</td>
+          <td class="${p>=0?"good":"bad"}">${money(p)}</td>
+          <td class="${r>=0?"good":"bad"}">${r.toFixed(2)}%</td>
+        </tr>`;
+    }).join("");
+  }
+
+  async function loadSessions(userId,email){
+    $("selectedUser").textContent = email || "全部玩家";
+
+    const {data,error} = await sb.rpc(
+      "admin_list_sessions",
+      {target_user_id:userId}
+    );
+
+    if(error){
+      alert("讀取紀錄失敗：" + error.message);
+      return;
+    }
+
+    const rows = data || [];
+    const body = $("sessionsBody");
+
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="11" class="empty">沒有紀錄</td></tr>';
+      return;
+    }
+
+    body.innerHTML = rows.map(r=>{
+      const profit = Number(r.profit||0);
+      const profitTwd = Number(r.profit_twd||0);
+      return `
+        <tr>
+          <td>${esc(r.date)}</td>
+          <td>${esc(r.type)}</td>
+          <td>${esc(r.series)}</td>
+          <td>${esc(r.name)}</td>
+          <td>${esc(r.currency)}</td>
+          <td>${money(r.buyin)}</td>
+          <td>${money(r.cashout)}</td>
+          <td class="${profit>=0?"good":"bad"}">${money(profit)}</td>
+          <td class="${profitTwd>=0?"good":"bad"}">${money(profitTwd)}</td>
+          <td>${esc(r.location)}</td>
+          <td>${esc(r.note)}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  init();
+</script>
+</body>
+</html>

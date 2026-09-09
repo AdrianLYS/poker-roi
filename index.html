@@ -9,9 +9,9 @@
 
   <style>
     :root {
-      --bg: #07111f;
-      --panel: #0f172a;
-      --line: #26344d;
+      --bg: #202225;
+      --panel: #2a2d31;
+      --line: #41454b;
       --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #60a5fa;
@@ -24,7 +24,10 @@
 
     body {
       margin: 0;
-      background: var(--bg);
+      background:
+      radial-gradient(circle at 15% 0%, rgba(255,255,255,.055), transparent 32%),
+      radial-gradient(circle at 85% 15%, rgba(255,255,255,.035), transparent 28%),
+      linear-gradient(145deg, #25272a 0%, #1d1f22 48%, #242629 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -171,6 +174,24 @@
 
     .chartbox { height: 280px; }
 
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .chart-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chart-toolbar select {
+      min-width: 220px;
+    }
+
     .config {
       border: 1px dashed #355079;
       padding: 12px;
@@ -195,6 +216,16 @@
       line-height: 1.6;
     }
 
+
+    .site-footer {
+      margin-top: 22px;
+      padding: 18px 8px 6px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+
     .hidden { display: none; }
 
     @media (max-width: 850px) {
@@ -202,6 +233,7 @@
       .formgrid { grid-template-columns: 1fr; }
       .full { grid-column: auto; }
       .social-promo { grid-template-columns: 1fr; }
+      .chart-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -218,6 +250,14 @@
       <div>
         <span class="pill" id="cloudState">Cloud: 未連線</span>
         <span class="pill" id="userState">未登入</span>
+      <button
+        class="secondary hidden"
+        id="topLogoutBtn"
+        onclick="signOut()"
+        style="margin-left:8px"
+      >
+        登出
+      </button>
       </div>
     </div>
 
@@ -237,24 +277,59 @@
       未設定前仍可使用本機模式，但外幣銀行匯率功能需要 Supabase Edge Function。
     </div>
 
-    <div class="panel">
+    <div class="panel" id="loginPanel">
       <div class="toolbar">
         <h2>登入 / 雲端同步</h2>
 
-        <div class="auth">
-          <input id="email" type="email" placeholder="你的 Email" style="width:220px" />
+        <div class="auth" id="authLoggedOut">
+          <input
+            id="email"
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+            style="width:220px"
+          />
 
-          <button class="primary" id="magicLinkBtn" onclick="sendMagicLink()">
-            寄登入連結
+          <input
+            id="password"
+            type="password"
+            placeholder="密碼（至少 6 碼）"
+            autocomplete="current-password"
+            style="width:220px"
+            onkeydown="handleAuthEnter(event)"
+          />
+
+          <button
+            class="primary"
+            id="loginBtn"
+            onclick="signInWithPassword()"
+          >
+            登入
           </button>
 
-          <button class="secondary hidden" id="logoutBtn" onclick="signOut()">
+          <button
+            class="secondary"
+            id="signupBtn"
+            onclick="signUpWithPassword()"
+          >
+            註冊
+          </button>
+        </div>
+
+        <div class="auth hidden" id="authLoggedIn">
+          <span class="pill" id="loggedInEmail"></span>
+
+          <button
+            class="secondary"
+            id="logoutBtn"
+            onclick="signOut()"
+          >
             登出
           </button>
         </div>
       </div>
 
-      <div class="muted">登入同一 Email 後，不同裝置會同步同一份資料。</div>
+      <div class="muted">使用 Email + 密碼登入。第一次使用請先註冊；登入同一帳號後，不同裝置會同步同一份資料。</div>
     </div>
 
     <div class="grid">
@@ -279,34 +354,13 @@
       </div>
 
       <div class="stat">
-        <div class="label">總時數</div>
-        <div class="value" id="sHours">0h</div>
-      </div>
-
-      <div class="stat">
-        <div class="label">平均時薪</div>
-        <div class="value" id="sHourly">0</div>
-      </div>
-
-      <div class="stat">
         <div class="label">盈利局率</div>
         <div class="value" id="sWinRate">0%</div>
       </div>
 
       <div class="stat">
-        <div class="label">紀錄筆數</div>
+        <div class="label">總參賽次數</div>
         <div class="value" id="sCount">0</div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="toolbar">
-        <h2>累積盈虧曲線</h2>
-        <span class="pill" id="chartCurrency"></span>
-      </div>
-
-      <div class="chartbox">
-        <canvas id="profitChart"></canvas>
       </div>
     </div>
 
@@ -343,20 +397,26 @@
           </select>
         </div>
 
-        <div class="full">
-          <label class="required">賽事／牌局名稱</label>
+        <div>
+          <label class="required">大賽名稱</label>
           <input
-            id="name"
-            list="recentNames"
-            placeholder="APPT Manila Main Event / 50-100 Cash"
+            id="series"
+            list="recentSeries"
+            placeholder="例如：APT"
             required
           />
-          <datalist id="recentNames"></datalist>
+          <datalist id="recentSeries"></datalist>
         </div>
 
         <div>
-          <label>Series</label>
-          <input id="series" />
+          <label class="required">賽事名稱</label>
+          <input
+            id="name"
+            list="recentNames"
+            placeholder="例如：Mystery Bounty Day 1A"
+            required
+          />
+          <datalist id="recentNames"></datalist>
         </div>
 
         <div>
@@ -417,6 +477,51 @@
 
     <div class="panel">
       <div class="toolbar">
+        <h2>累積盈虧曲線</h2>
+        <span class="pill" id="chartCurrency"></span>
+      </div>
+
+      <div class="chartbox">
+        <canvas id="profitChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="panel">
+        <div class="chart-toolbar">
+          <div>
+            <h2 style="margin-bottom:4px">單獨大賽盈虧曲線</h2>
+            <div class="muted">選擇一個大賽查看累積盈虧</div>
+          </div>
+          <select id="seriesChartSelect" onchange="drawBreakdownCharts()">
+            <option value="">尚無大賽資料</option>
+          </select>
+        </div>
+
+        <div class="chartbox">
+          <canvas id="seriesProfitChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="chart-toolbar">
+          <div>
+            <h2 style="margin-bottom:4px">單獨賽事盈虧曲線</h2>
+            <div class="muted">選擇一個賽事查看累積盈虧</div>
+          </div>
+          <select id="eventChartSelect" onchange="drawBreakdownCharts()">
+            <option value="">尚無賽事資料</option>
+          </select>
+        </div>
+
+        <div class="chartbox">
+          <canvas id="eventProfitChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
         <h2>歷史紀錄</h2>
 
         <div class="filters">
@@ -444,8 +549,8 @@
               <th>日期</th>
               <th>類型</th>
               <th>幣別</th>
-              <th>牌局</th>
-              <th>Series</th>
+              <th>賽事名稱</th>
+              <th>大賽名稱</th>
               <th>地點</th>
               <th>時數</th>
               <th>Buy-in</th>
@@ -462,6 +567,10 @@
         </table>
       </div>
     </div>
+
+    <footer class="site-footer">
+      Designed &amp; Developed by Adrian Lam
+    </footer>
 
   </div>
 
@@ -483,8 +592,13 @@
 
     let preferences = JSON.parse(
       localStorage.getItem(PREF_KEY) ||
-      '{"recentNames":[],"lastType":"","lastCurrency":""}'
+      '{"recentNames":[],"recentSeries":[],"lastName":"","lastSeries":"","lastType":"","lastCurrency":""}'
     );
+
+    preferences.recentNames = preferences.recentNames || [];
+    preferences.recentSeries = preferences.recentSeries || [];
+    preferences.lastName = preferences.lastName || "";
+    preferences.lastSeries = preferences.lastSeries || "";
 
     let fxCache = JSON.parse(
       localStorage.getItem(RATE_CACHE_KEY) || "{}"
@@ -493,7 +607,8 @@
     let sb = null;
     let session = null;
     let chart = null;
-    let magicLinkCooldownTimer = null;
+    let seriesChart = null;
+    let eventChart = null;
     let fxRequestToken = 0;
 
     const $ = (id) => document.getElementById(id);
@@ -636,14 +751,48 @@
         .join("");
     }
 
+    function renderRecentSeries() {
+      const list = $("recentSeries");
+      if (!list) return;
+
+      const fromRecords = [...records]
+        .sort((a, b) =>
+          String(b.created_at || b.date || "")
+            .localeCompare(String(a.created_at || a.date || ""))
+        )
+        .map((r) => r.series)
+        .filter(Boolean);
+
+      const series = [
+        ...preferences.recentSeries,
+        ...fromRecords
+      ].filter((name, index, array) =>
+        array.indexOf(name) === index
+      ).slice(0, 8);
+
+      list.innerHTML = series
+        .map((name) => `<option value="${escapeHtml(name)}"></option>`)
+        .join("");
+    }
+
     function rememberPreferences(record) {
       const name = record.name?.trim();
+      const series = record.series?.trim();
 
       if (name) {
         preferences.recentNames = [
           name,
           ...preferences.recentNames.filter((item) => item !== name)
-        ].slice(0, 5);
+        ].slice(0, 8);
+        preferences.lastName = name;
+      }
+
+      if (series) {
+        preferences.recentSeries = [
+          series,
+          ...preferences.recentSeries.filter((item) => item !== series)
+        ].slice(0, 8);
+        preferences.lastSeries = series;
       }
 
       preferences.lastType = record.type || "";
@@ -651,6 +800,7 @@
 
       savePreferences();
       renderRecentNames();
+      renderRecentSeries();
     }
 
     const configured =
@@ -663,6 +813,15 @@
       today();
 
       renderRecentNames();
+      renderRecentSeries();
+
+      if (preferences.lastName) {
+        $("name").value = preferences.lastName;
+      }
+
+      if (preferences.lastSeries) {
+        $("series").value = preferences.lastSeries;
+      }
 
       if (preferences.lastType) {
         $("type").value = preferences.lastType;
@@ -712,97 +871,183 @@
     }
 
     function ui() {
+      const loggedIn = Boolean(session);
+      const email = session?.user?.email || "";
+
       $("userState").textContent =
-        session?.user?.email || "未登入";
+        loggedIn ? email : "未登入";
 
       $("cloudState").textContent =
-        session ? "Cloud: 已連線" : "Cloud: 可用";
+        loggedIn ? "Cloud: 已同步" : "Cloud: 可用";
 
-      $("logoutBtn").classList.toggle("hidden", !session);
+      $("loginPanel")
+        ?.classList
+        .toggle("hidden", loggedIn);
+
+      $("authLoggedOut")
+        ?.classList
+        .toggle("hidden", loggedIn);
+
+      $("authLoggedIn")
+        ?.classList
+        .toggle("hidden", !loggedIn);
+
+      $("topLogoutBtn")
+        ?.classList
+        .toggle("hidden", !loggedIn);
+
+      if ($("loggedInEmail")) {
+        $("loggedInEmail").textContent = email;
+      }
     }
 
-    function startMagicLinkCooldown(seconds = 60) {
-      const button = $("magicLinkBtn");
-      if (!button) return;
+    function setAuthButtonsLoading(loading, action = "") {
+      const loginBtn = $("loginBtn");
+      const signupBtn = $("signupBtn");
 
-      if (magicLinkCooldownTimer) {
-        clearInterval(magicLinkCooldownTimer);
+      if (loginBtn) {
+        loginBtn.disabled = loading;
+        loginBtn.textContent =
+          loading && action === "login"
+            ? "登入中..."
+            : "登入";
       }
 
-      let remaining = seconds;
-      button.disabled = true;
-      button.textContent = `${remaining} 秒後可重新寄送`;
-
-      magicLinkCooldownTimer = setInterval(() => {
-        remaining -= 1;
-
-        if (remaining <= 0) {
-          clearInterval(magicLinkCooldownTimer);
-          magicLinkCooldownTimer = null;
-          button.disabled = false;
-          button.textContent = "寄登入連結";
-          return;
-        }
-
-        button.textContent = `${remaining} 秒後可重新寄送`;
-      }, 1000);
+      if (signupBtn) {
+        signupBtn.disabled = loading;
+        signupBtn.textContent =
+          loading && action === "signup"
+            ? "註冊中..."
+            : "註冊";
+      }
     }
 
-    async function sendMagicLink() {
+    function getAuthCredentials() {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (!email) {
+        alert("請輸入 Email");
+        $("email").focus();
+        return null;
+      }
+
+      if (!password) {
+        alert("請輸入密碼");
+        $("password").focus();
+        return null;
+      }
+
+      if (password.length < 6) {
+        alert("密碼至少需要 6 碼");
+        $("password").focus();
+        return null;
+      }
+
+      return { email, password };
+    }
+
+    function translateAuthError(error) {
+      const message =
+        String(error?.message || "").toLowerCase();
+
+      if (message.includes("invalid login credentials")) {
+        return "Email 或密碼錯誤。";
+      }
+
+      if (message.includes("email not confirmed")) {
+        return "Email 尚未驗證，請先到信箱完成驗證。";
+      }
+
+      if (message.includes("user already registered")) {
+        return "這個 Email 已經註冊過，請直接登入。";
+      }
+
+      if (
+        message.includes("password") &&
+        (message.includes("6") || message.includes("characters"))
+      ) {
+        return "密碼至少需要 6 碼。";
+      }
+
+      if (
+        message.includes("rate limit") ||
+        message.includes("too many")
+      ) {
+        return "操作次數太頻繁，請稍後再試。";
+      }
+
+      return error?.message ||
+        "登入系統發生錯誤，請稍後再試。";
+    }
+
+    async function signInWithPassword() {
       if (!configured) {
         alert("先設定 config.js");
         return;
       }
 
-      const email = $("email").value.trim();
+      const credentials = getAuthCredentials();
+      if (!credentials) return;
 
-      if (!email) {
-        alert("請輸入 Email");
+      setAuthButtonsLoading(true, "login");
+
+      const { error } =
+        await sb.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password
+        });
+
+      setAuthButtonsLoading(false);
+
+      if (error) {
+        alert(translateAuthError(error));
         return;
       }
 
-      const button = $("magicLinkBtn");
+      $("password").value = "";
+    }
 
-      if (button?.disabled) return;
+    async function signUpWithPassword() {
+      if (!configured) {
+        alert("先設定 config.js");
+        return;
+      }
 
-      button.disabled = true;
-      button.textContent = "寄送中...";
+      const credentials = getAuthCredentials();
+      if (!credentials) return;
 
-      try {
-        const { error } = await sb.auth.signInWithOtp({
-          email,
+      setAuthButtonsLoading(true, "signup");
+
+      const { data, error } =
+        await sb.auth.signUp({
+          email: credentials.email,
+          password: credentials.password,
           options: {
-            emailRedirectTo: location.origin + location.pathname
+            emailRedirectTo:
+              location.origin + location.pathname
           }
         });
 
-        if (error) {
-          button.disabled = false;
-          button.textContent = "寄登入連結";
+      setAuthButtonsLoading(false);
 
-          const errorMessage = error.message || "";
-          const lower = errorMessage.toLowerCase();
+      if (error) {
+        alert(translateAuthError(error));
+        return;
+      }
 
-          if (
-            lower.includes("rate limit") ||
-            lower.includes("rate_limit") ||
-            lower.includes("too many")
-          ) {
-            alert("寄送次數太頻繁，Supabase 暫時限制寄信。請稍後再試。");
-          } else {
-            alert(errorMessage);
-          }
+      $("password").value = "";
 
-          return;
-        }
+      if (data.session) {
+        alert("註冊成功，已登入。之後可直接使用 Email + 密碼登入。");
+      } else {
+        alert("註冊成功。請到 Email 信箱完成驗證後，再回來登入。");
+      }
+    }
 
-        startMagicLinkCooldown(60);
-        alert("登入連結已寄出，請查看最新一封 Email。60 秒後才能再次寄送。");
-
-      } catch (_) {
-        button.disabled = false;
-        button.textContent = "寄登入連結";
-        alert("寄送登入連結時發生錯誤，請稍後再試。");
+    function handleAuthEnter(event) {
+      if (event.key === "Enter") {
+        signInWithPassword();
       }
     }
 
@@ -958,7 +1203,8 @@
         ["date", "日期"],
         ["type", "類型"],
         ["currency", "幣別"],
-        ["name", "賽事／牌局名稱"],
+        ["series", "大賽名稱"],
+        ["name", "賽事名稱"],
         ["buyin", "Buy-in"]
       ];
 
@@ -1093,8 +1339,6 @@
       }
 
       [
-        "name",
-        "series",
         "location",
         "start",
         "end",
@@ -1105,6 +1349,8 @@
         $(id).value = "";
       });
 
+      $("series").value = preferences.lastSeries || "";
+      $("name").value = preferences.lastName || "";
       $("type").value = preferences.lastType || "";
       $("currency").value = preferences.lastCurrency || "";
 
@@ -1269,13 +1515,7 @@
         totalCashout = data.reduce((sum, r) => sum + r.cashout, 0);
         totalProfit = totalCashout - totalBuyin;
       }
-
-      const totalHours = data.reduce(
-        (sum, record) => sum + record.hours,
-        0
-      );
-
-      $("sProfit").textContent =
+$("sProfit").textContent =
         `${statPrefix}${totalProfit >= 0 ? "+" : ""}${money(totalProfit)}`;
 
       $("sBuyin").textContent =
@@ -1286,14 +1526,7 @@
 
       $("sRoi").textContent =
         pct(totalBuyin ? (totalProfit / totalBuyin) * 100 : 0);
-
-      $("sHours").textContent =
-        totalHours.toFixed(2) + "h";
-
-      $("sHourly").textContent =
-        `${statPrefix}${money(totalHours ? totalProfit / totalHours : 0)}`;
-
-      const winningSessions = data.filter(
+const winningSessions = data.filter(
         (record) => record.profit > 0
       ).length;
 
@@ -1304,6 +1537,7 @@
         data.length;
 
       draw(data, statsBasis);
+      drawBreakdownCharts();
     }
 
     function draw(data, statsBasis) {
@@ -1368,6 +1602,145 @@
       });
     }
 
+
+    function getProfitInStatsBasis(record, statsBasis) {
+      if (statsBasis === "TWD") {
+        return Number(
+          record.currency === "TWD"
+            ? record.profit
+            : record.profit_twd
+        ) || 0;
+      }
+
+      return Number(record.profit || 0);
+    }
+
+    function populateBreakdownSelectors(data) {
+      const seriesSelect = $("seriesChartSelect");
+      const eventSelect = $("eventChartSelect");
+
+      const seriesValues = [...new Set(
+        data.map((record) => record.series).filter(Boolean)
+      )];
+
+      const eventValues = [...new Set(
+        data.map((record) => record.name).filter(Boolean)
+      )];
+
+      const currentSeries = seriesSelect?.value || "";
+      const currentEvent = eventSelect?.value || "";
+
+      if (seriesSelect) {
+        seriesSelect.innerHTML = seriesValues.length
+          ? seriesValues
+              .map((value) =>
+                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+              )
+              .join("")
+          : '<option value="">尚無大賽資料</option>';
+
+        if (seriesValues.includes(currentSeries)) {
+          seriesSelect.value = currentSeries;
+        } else if (
+          preferences.lastSeries &&
+          seriesValues.includes(preferences.lastSeries)
+        ) {
+          seriesSelect.value = preferences.lastSeries;
+        }
+      }
+
+      if (eventSelect) {
+        eventSelect.innerHTML = eventValues.length
+          ? eventValues
+              .map((value) =>
+                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+              )
+              .join("")
+          : '<option value="">尚無賽事資料</option>';
+
+        if (eventValues.includes(currentEvent)) {
+          eventSelect.value = currentEvent;
+        } else if (
+          preferences.lastName &&
+          eventValues.includes(preferences.lastName)
+        ) {
+          eventSelect.value = preferences.lastName;
+        }
+      }
+    }
+
+    function drawOneBreakdownChart(canvasId, oldChart, rows, label, statsBasis) {
+      const sorted = [...rows].sort((a, b) => {
+        const dateCompare = String(a.date).localeCompare(String(b.date));
+        if (dateCompare !== 0) return dateCompare;
+        return String(a.created_at || "").localeCompare(String(b.created_at || ""));
+      });
+
+      let cumulative = 0;
+      const chartData = sorted.map((record) => {
+        cumulative += getProfitInStatsBasis(record, statsBasis);
+        return cumulative;
+      });
+
+      const labels = sorted.map((record) => record.date);
+
+      if (oldChart) oldChart.destroy();
+
+      return new Chart($(canvasId), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: chartData,
+            tension: .25,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function drawBreakdownCharts() {
+      const data = filtered();
+      populateBreakdownSelectors(data);
+
+      const statsBasis = getStatsBasis(data);
+      const selectedSeries = $("seriesChartSelect")?.value || "";
+      const selectedEvent = $("eventChartSelect")?.value || "";
+
+      const seriesRows = data.filter(
+        (record) => record.series === selectedSeries
+      );
+
+      const eventRows = data.filter(
+        (record) => record.name === selectedEvent
+      );
+
+      seriesChart = drawOneBreakdownChart(
+        "seriesProfitChart",
+        seriesChart,
+        seriesRows,
+        selectedSeries
+          ? `${selectedSeries}｜累積盈虧`
+          : "大賽累積盈虧",
+        statsBasis
+      );
+
+      eventChart = drawOneBreakdownChart(
+        "eventProfitChart",
+        eventChart,
+        eventRows,
+        selectedEvent
+          ? `${selectedEvent}｜累積盈虧`
+          : "賽事累積盈虧",
+        statsBasis
+      );
+    }
+
     function downloadFile(content, filename, type) {
       const blob = new Blob([content], { type });
       const url = URL.createObjectURL(blob);
@@ -1394,7 +1767,7 @@
         "類型",
         "幣別",
         "牌局",
-        "Series",
+        "大賽名稱",
         "地點",
         "時數",
         "Buy-in",
