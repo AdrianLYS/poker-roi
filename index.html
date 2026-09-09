@@ -840,22 +840,34 @@
 
       $("configWarning").classList.add("hidden");
 
+      // 明確啟用 Supabase Session 持久化與自動刷新。
+      // 這樣 Safari / PWA 從背景恢復時，只要 refresh token 仍有效，
+      // 就會自動恢復登入，不需要重新輸入 Email / 密碼。
       sb = supabase.createClient(
         APP_CONFIG.SUPABASE_URL,
-        APP_CONFIG.SUPABASE_ANON_KEY
+        APP_CONFIG.SUPABASE_ANON_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: window.localStorage
+          }
+        }
       );
 
-      const { data } = await sb.auth.getSession();
-      session = data.session;
+      await restoreSession();
 
-      ui();
-
-      sb.auth.onAuthStateChange(async (_, newSession) => {
+      // Supabase 會在登入、登出、Token 刷新時通知這裡。
+      sb.auth.onAuthStateChange(async (event, newSession) => {
         session = newSession;
         ui();
 
         if (newSession) {
-          await load();
+          // TOKEN_REFRESHED 時不需要每次重抓全部資料，避免重複請求。
+          if (event !== "TOKEN_REFRESHED") {
+            await load();
+          }
         } else {
           render();
         }
@@ -867,7 +879,74 @@
         render();
       }
 
+      // iPhone Safari / 加入主畫面的 PWA 長時間放背景後，
+      // 回到前景時主動重新檢查並刷新 Session。
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          restoreSession(true);
+        }
+      });
+
+      window.addEventListener("pageshow", () => {
+        restoreSession(true);
+      });
+
       updateTwdPreview();
+    }
+
+    let restoringSession = false;
+
+    async function restoreSession(refreshIfNeeded = false) {
+      if (!sb || restoringSession) return;
+
+      restoringSession = true;
+
+      try {
+        let { data, error } = await sb.auth.getSession();
+
+        if (error) {
+          console.warn("Supabase getSession failed:", error);
+          return;
+        }
+
+        let restored = data?.session || null;
+
+        // 頁面從背景恢復時，如果 Token 已接近過期，就主動刷新。
+        if (restored && refreshIfNeeded) {
+          const expiresAtMs = Number(restored.expires_at || 0) * 1000;
+          const expiresSoon = !expiresAtMs || expiresAtMs - Date.now() < 5 * 60 * 1000;
+
+          if (expiresSoon) {
+            const refreshed = await sb.auth.refreshSession();
+
+            if (!refreshed.error && refreshed.data?.session) {
+              restored = refreshed.data.session;
+            } else if (refreshed.error) {
+              console.warn("Supabase refreshSession failed:", refreshed.error);
+            }
+          }
+        }
+
+        const wasLoggedIn = Boolean(session);
+        const oldUserId = session?.user?.id || null;
+
+        session = restored;
+        ui();
+
+        const isLoggedIn = Boolean(session);
+        const newUserId = session?.user?.id || null;
+
+        // 只有登入狀態或帳號真的改變時才重新抓資料。
+        if (isLoggedIn && (!wasLoggedIn || oldUserId !== newUserId)) {
+          await load();
+        } else if (!isLoggedIn && wasLoggedIn) {
+          render();
+        }
+      } catch (err) {
+        console.warn("Session restore failed:", err);
+      } finally {
+        restoringSession = false;
+      }
     }
 
     function ui() {
