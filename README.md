@@ -94,5 +94,3 @@ Instagram
 ## 👨‍💻 Developer
 
 **Designed & Developed by Adrian Lam**
-
-© 2026 Poker ROI Tracker
