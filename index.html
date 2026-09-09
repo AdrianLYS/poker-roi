@@ -1,22 +1,1967 @@
-<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.webmanifest"><title>Poker ROI Tracker Cloud</title><style>
-:root{--bg:#07111f;--panel:#0f172a;--line:#26344d;--text:#f8fafc;--muted:#94a3b8;--accent:#60a5fa;--good:#34d399;--bad:#fb7185}*{box-sizing:border-box}body{margin:0;background:#07111f;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1180px;margin:auto;padding:18px 14px 80px}.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.sub,.muted{color:var(--muted)}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px}.stat{padding:14px}.label{font-size:12px;color:var(--muted)}.value{font-size:22px;font-weight:800;margin-top:4px}.panel{padding:16px;margin-top:12px}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.full{grid-column:1/-1}label{display:block;font-size:13px;margin-bottom:6px}input,select,textarea{width:100%;padding:11px;border-radius:11px;border:1px solid var(--line);background:#091220;color:white;font-size:16px}textarea{min-height:80px}button{padding:11px 14px;border:0;border-radius:11px;font-weight:700;cursor:pointer}.primary{background:var(--accent)}.secondary{background:#21304a;color:white}.danger{background:#3a1d2a;color:#fecdd3}.actions,.filters,.auth{display:flex;gap:8px;flex-wrap:wrap}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:10px;border-bottom:1px solid #1c2a40;font-size:13px;text-align:left}.good{color:var(--good)}.bad{color:var(--bad)}.chartbox{height:280px}.config{border:1px dashed #355079;padding:12px;border-radius:12px;margin-top:12px}.hidden{display:none}@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}</style></head><body><div class="wrap">
-<div class="top"><div><h1>♠ Poker ROI Tracker Cloud</h1><div class="sub">跨裝置同步 · Bankroll · ROI · 時薪 · 盈虧曲線</div></div><div><span class="pill" id="cloudState">Cloud: 未連線</span> <span class="pill" id="userState">未登入</span></div></div>
-<div id="configWarning" class="config">尚未設定 Supabase。先在 <b>config.js</b> 填入 SUPABASE_URL 與 SUPABASE_ANON_KEY；未設定前仍可使用本機模式。</div>
-<div class="panel"><div class="toolbar"><h2>登入 / 雲端同步</h2><div class="auth"><input id="email" type="email" placeholder="你的 Email" style="width:220px"><button class="primary" onclick="sendMagicLink()">寄登入連結</button><button class="secondary hidden" id="logoutBtn" onclick="signOut()">登出</button></div></div><div class="muted">登入同一 Email 後，不同裝置會同步同一份資料。</div></div>
-<div class="grid"><div class="stat"><div class="label">Bankroll / 累積盈虧</div><div class="value" id="sProfit">0</div></div><div class="stat"><div class="label">總 Buy-in</div><div class="value" id="sBuyin">0</div></div><div class="stat"><div class="label">總 Cash out</div><div class="value" id="sCashout">0</div></div><div class="stat"><div class="label">整體 ROI</div><div class="value" id="sRoi">0%</div></div><div class="stat"><div class="label">總時數</div><div class="value" id="sHours">0h</div></div><div class="stat"><div class="label">平均時薪</div><div class="value" id="sHourly">0</div></div><div class="stat"><div class="label">盈利局率</div><div class="value" id="sWinRate">0%</div></div><div class="stat"><div class="label">紀錄筆數</div><div class="value" id="sCount">0</div></div></div>
-<div class="panel"><div class="toolbar"><h2>累積盈虧曲線</h2><span class="pill" id="chartCurrency"></span></div><div class="chartbox"><canvas id="profitChart"></canvas></div></div>
-<div class="panel"><div class="toolbar"><h2>新增紀錄</h2></div><div class="formgrid"><div><label>日期</label><input id="date" type="date"></div><div><label>類型</label><select id="type"><option>Tournament</option><option>Cash</option></select></div><div><label>幣別</label><select id="currency"><option>TWD</option><option>USD</option><option>PHP</option><option>THB</option><option>MYR</option><option>KRW</option><option>HKD</option></select></div><div class="full"><label>賽事／牌局名稱</label><input id="name" placeholder="APPT Manila Main Event / 50-100 Cash"></div><div><label>Series</label><input id="series"></div><div><label>地點</label><input id="location"></div><div><label>開始時間</label><input id="start" type="time"></div><div><label>結束時間</label><input id="end" type="time"></div><div><label>Buy-in</label><input id="buyin" type="number" min="0" step="0.01"></div><div><label>Cash out</label><input id="cashout" type="number" min="0" step="0.01"></div><div class="full"><label>備註</label><textarea id="note"></textarea></div></div><div class="actions" style="margin-top:14px"><button class="primary" onclick="addRecord()">＋ 新增紀錄</button><button class="secondary" onclick="exportCSV()">匯出 CSV</button><button class="secondary" onclick="exportJSON()">備份 JSON</button></div></div>
-<div class="panel"><div class="toolbar"><h2>歷史紀錄</h2><div class="filters"><select id="filterType" onchange="render()"><option value="All">全部類型</option><option>Tournament</option><option>Cash</option></select><select id="filterCurrency" onchange="render()"><option value="All">全部幣別</option><option>TWD</option><option>USD</option><option>PHP</option><option>THB</option><option>MYR</option><option>KRW</option><option>HKD</option></select></div></div><div class="tablewrap"><table><thead><tr><th>日期</th><th>類型</th><th>幣別</th><th>牌局</th><th>Series</th><th>地點</th><th>時數</th><th>Buy-in</th><th>Cash out</th><th>盈虧</th><th>ROI</th><th>時薪</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="config.js"></script><script>
-const KEY='poker_roi_v2';let records=JSON.parse(localStorage.getItem(KEY)||'[]'),sb=null,session=null,chart=null;const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString('zh-TW',{maximumFractionDigits:2}),pct=n=>isFinite(n)?Number(n).toFixed(1)+'%':'—';
-function hours(s,e){if(!s||!e)return 0;let[a,b]=[s,e].map(x=>{let[h,m]=x.split(':').map(Number);return h*60+m});if(b<a)b+=1440;return(b-a)/60}function norm(r){let buyin=Number(r.buyin||0),cashout=Number(r.cashout||0),h=Number(r.hours??hours(r.start_time||r.start,r.end_time||r.end)),profit=cashout-buyin;return{id:r.id||Date.now()+Math.random(),date:r.date,type:r.type||'Tournament',currency:r.currency||'TWD',name:r.name||'未命名牌局',series:r.series||'',location:r.location||'',start:r.start_time||r.start||'',end:r.end_time||r.end||'',buyin,cashout,note:r.note||'',hours:h,profit,roi:buyin?profit/buyin*100:0,hourly:h?profit/h:0,created_at:r.created_at||new Date().toISOString()}}
-function today(){let d=new Date();$('date').value=d.toISOString().slice(0,10)}function save(){localStorage.setItem(KEY,JSON.stringify(records))}const configured=window.APP_CONFIG&&window.APP_CONFIG.SUPABASE_URL&&!window.APP_CONFIG.SUPABASE_URL.includes('YOUR_');
-async function init(){today();if(!configured){$('cloudState').textContent='Cloud: 本機模式';render();return}$('configWarning').classList.add('hidden');sb=supabase.createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_ANON_KEY);let{data}=await sb.auth.getSession();session=data.session;ui();sb.auth.onAuthStateChange(async(_,s)=>{session=s;ui();if(s)await load();else render()});if(session)await load();else render()}
-function ui(){$('userState').textContent=session?.user?.email||'未登入';$('cloudState').textContent=session?'Cloud: 已連線':'Cloud: 可用';$('logoutBtn').classList.toggle('hidden',!session)}async function sendMagicLink(){if(!configured)return alert('先設定 config.js');let email=$('email').value.trim();if(!email)return alert('請輸入 Email');let{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});alert(error?error.message:'登入連結已寄出')}async function signOut(){await sb.auth.signOut()}
-async function load(){let{data,error}=await sb.from('poker_sessions').select('*').order('date',{ascending:false});if(error)return alert(error.message);records=(data||[]).map(norm);save();render()}
-async function addRecord(){let r=norm({date:$('date').value,type:$('type').value,currency:$('currency').value,name:$('name').value.trim(),series:$('series').value.trim(),location:$('location').value.trim(),start:$('start').value,end:$('end').value,buyin:$('buyin').value,cashout:$('cashout').value,note:$('note').value.trim()});if(!r.date)return alert('請填日期');if(session){let p={user_id:session.user.id,date:r.date,type:r.type,currency:r.currency,name:r.name,series:r.series,location:r.location,start_time:r.start||null,end_time:r.end||null,buyin:r.buyin,cashout:r.cashout,note:r.note};let{error}=await sb.from('poker_sessions').insert(p);if(error)return alert(error.message);await load()}else{records.unshift(r);save();render()}['name','series','location','start','end','buyin','cashout','note'].forEach(x=>$(x).value='')}
-async function del(id){if(!confirm('確定刪除？'))return;if(session&&typeof id==='string'){let{error}=await sb.from('poker_sessions').delete().eq('id',id);if(error)return alert(error.message);await load()}else{records=records.filter(r=>r.id!==id);save();render()}}
-function filtered(){return records.filter(r=>($('filterType').value==='All'||r.type===$('filterType').value)&&($('filterCurrency').value==='All'||r.currency===$('filterCurrency').value))}function render(){let a=filtered(),tb=$('tbody');tb.innerHTML=a.length?a.map(r=>`<tr><td>${r.date}</td><td>${r.type}</td><td>${r.currency}</td><td>${r.name}</td><td>${r.series||'—'}</td><td>${r.location||'—'}</td><td>${r.hours?r.hours.toFixed(2)+'h':'—'}</td><td>${money(r.buyin)}</td><td>${money(r.cashout)}</td><td class="${r.profit>0?'good':r.profit<0?'bad':''}">${r.profit>=0?'+':''}${money(r.profit)}</td><td>${pct(r.roi)}</td><td>${r.hours?money(r.hourly):'—'}</td><td><button class="danger" onclick='del(${JSON.stringify(r.id)})'>刪除</button></td></tr>`).join(''):'<tr><td colspan="13" class="muted">目前沒有紀錄</td></tr>';let bi=a.reduce((s,r)=>s+r.buyin,0),co=a.reduce((s,r)=>s+r.cashout,0),pr=co-bi,hr=a.reduce((s,r)=>s+r.hours,0);$('sProfit').textContent=(pr>=0?'+':'')+money(pr);$('sBuyin').textContent=money(bi);$('sCashout').textContent=money(co);$('sRoi').textContent=pct(bi?pr/bi*100:0);$('sHours').textContent=hr.toFixed(2)+'h';$('sHourly').textContent=money(hr?pr/hr:0);$('sWinRate').textContent=pct(a.length?a.filter(r=>r.profit>0).length/a.length*100:0);$('sCount').textContent=a.length;draw(a)}
-function draw(a){let s=[...a].sort((x,y)=>x.date.localeCompare(y.date)),cum=0,d=s.map(r=>cum+=r.profit),labels=s.map(r=>r.date),cs=[...new Set(s.map(r=>r.currency))];$('chartCurrency').textContent=cs.length===1?'幣別：'+cs[0]:'混合幣別時僅做數值加總';if(chart)chart.destroy();chart=new Chart($('profitChart'),{type:'line',data:{labels,datasets:[{label:'累積盈虧',data:d,tension:.25,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false}})}
-function dl(c,n,t){let b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}function exportJSON(){dl(JSON.stringify(records,null,2),'poker_roi_backup.json','application/json')}function exportCSV(){let h=['日期','類型','幣別','牌局','Series','地點','時數','Buy-in','Cash out','盈虧','ROI%','時薪'],rows=filtered().map(r=>[r.date,r.type,r.currency,r.name,r.series,r.location,r.hours,r.buyin,r.cashout,r.profit,r.roi,r.hourly]);dl('\uFEFF'+[h,...rows].map(x=>x.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n'),'poker_roi_records.csv','text/csv;charset=utf-8')}if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js').catch(()=>{});init();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="manifest.webmanifest" />
+
+    <title>Poker ROI Tracker Cloud</title>
+
+    <style>
+      :root {
+        --bg: #07111f;
+        --panel: #0f172a;
+        --line: #26344d;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #60a5fa;
+        --good: #34d399;
+        --bad: #fb7185;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #07111f;
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: auto;
+        padding: 18px 14px 80px;
+      }
+
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .sub,
+      .muted {
+        color: var(--muted);
+      }
+
+      .pill {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .stat,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+
+      .stat {
+        padding: 14px;
+      }
+
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .value {
+        font-size: 22px;
+        font-weight: 800;
+        margin-top: 4px;
+      }
+
+      .panel {
+        padding: 16px;
+        margin-top: 12px;
+      }
+
+      .formgrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 11px;
+        border-radius: 11px;
+        border: 1px solid var(--line);
+        background: #091220;
+        color: white;
+        font-size: 16px;
+      }
+
+      textarea {
+        min-height: 80px;
+      }
+
+      button {
+        padding: 11px 14px;
+        border: 0;
+        border-radius: 11px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--accent);
+      }
+
+      .secondary {
+        background: #21304a;
+        color: white;
+      }
+
+      .danger {
+        background: #3a1d2a;
+        color: #fecdd3;
+      }
+
+      .actions,
+      .filters,
+      .auth {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .tablewrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1100px;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #1c2a40;
+        font-size: 13px;
+        text-align: left;
+      }
+
+      .good {
+        color: var(--good);
+      }
+
+      .bad {
+        color: var(--bad);
+      }
+
+      .chartbox {
+        height: 280px;
+      }
+
+      .config {
+        border: 1px dashed #355079;
+        padding: 12px;
+        border-radius: 12px;
+        margin-top: 12px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 850px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .formgrid {
+          grid-template-columns: 1fr;
+        }
+
+        .full {
+          grid-column: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+
+      <!-- =========================
+           Header
+      ========================== -->
+
+      <div class="top">
+        <div>
+          <h1>♠ Poker ROI Tracker Cloud</h1>
+
+          <div class="sub">
+            跨裝置同步 · Bankroll · ROI · 時薪 · 盈虧曲線
+          </div>
+        </div>
+
+        <div>
+          <span class="pill" id="cloudState">
+            Cloud: 未連線
+          </span>
+
+          <span class="pill" id="userState">
+            未登入
+          </span>
+        </div>
+      </div>
+
+
+      <!-- =========================
+           Supabase 設定提示
+      ========================== -->
+
+      <div id="configWarning" class="config">
+        尚未設定 Supabase。先在
+        <b>config.js</b>
+        填入 SUPABASE_URL 與 SUPABASE_ANON_KEY；未設定前仍可使用本機模式。
+      </div>
+
+
+      <!-- =========================
+           登入 / 雲端同步
+      ========================== -->
+
+      <div class="panel">
+        <div class="toolbar">
+          <h2>登入 / 雲端同步</h2>
+
+          <div class="auth">
+            <input
+              id="email"
+              type="email"
+              placeholder="你的 Email"
+              style="width: 220px"
+            />
+
+            <button
+              class="primary"
+              onclick="sendMagicLink()"
+            >
+              寄登入連結
+            </button>
+
+            <button
+              class="secondary hidden"
+              id="logoutBtn"
+              onclick="signOut()"
+            >
+              登出
+            </button>
+          </div>
+        </div>
+
+        <div class="muted">
+          登入同一 Email 後，不同裝置會同步同一份資料。
+        </div>
+      </div>
+
+
+      <!-- =========================
+           統計數據
+      ========================== -->
+
+      <div class="grid">
+
+        <div class="stat">
+          <div class="label">
+            Bankroll / 累積盈虧
+          </div>
+
+          <div class="value" id="sProfit">
+            0
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            總 Buy-in
+          </div>
+
+          <div class="value" id="sBuyin">
+            0
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            總 Cash out
+          </div>
+
+          <div class="value" id="sCashout">
+            0
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            整體 ROI
+          </div>
+
+          <div class="value" id="sRoi">
+            0%
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            總時數
+          </div>
+
+          <div class="value" id="sHours">
+            0h
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            平均時薪
+          </div>
+
+          <div class="value" id="sHourly">
+            0
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            盈利局率
+          </div>
+
+          <div class="value" id="sWinRate">
+            0%
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            紀錄筆數
+          </div>
+
+          <div class="value" id="sCount">
+            0
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           盈虧曲線
+      ========================== -->
+
+      <div class="panel">
+        <div class="toolbar">
+          <h2>累積盈虧曲線</h2>
+
+          <span
+            class="pill"
+            id="chartCurrency"
+          ></span>
+        </div>
+
+        <div class="chartbox">
+          <canvas id="profitChart"></canvas>
+        </div>
+      </div>
+
+
+      <!-- =========================
+           新增紀錄
+      ========================== -->
+
+      <div class="panel">
+
+        <div class="toolbar">
+          <h2>新增紀錄</h2>
+        </div>
+
+        <div class="formgrid">
+
+          <!-- 日期 -->
+
+          <div>
+            <label>日期</label>
+
+            <input
+              id="date"
+              type="date"
+            />
+          </div>
+
+
+          <!-- 類型 -->
+
+          <div>
+            <label>類型</label>
+
+            <select id="type">
+              <option>Tournament</option>
+              <option>Cash</option>
+            </select>
+          </div>
+
+
+          <!-- 幣別 -->
+
+          <div>
+            <label>幣別</label>
+
+            <select id="currency">
+              <option>TWD</option>
+              <option>USD</option>
+              <option>PHP</option>
+              <option>THB</option>
+              <option>MYR</option>
+              <option>KRW</option>
+              <option>HKD</option>
+            </select>
+          </div>
+
+
+          <!-- 牌局名稱 -->
+
+          <div class="full">
+            <label>賽事／牌局名稱</label>
+
+            <input
+              id="name"
+              placeholder="APPT Manila Main Event / 50-100 Cash"
+            />
+          </div>
+
+
+          <!-- Series -->
+
+          <div>
+            <label>Series</label>
+
+            <input id="series" />
+          </div>
+
+
+          <!-- 地點 -->
+
+          <div>
+            <label>地點</label>
+
+            <input id="location" />
+          </div>
+
+
+          <!-- 開始時間 -->
+
+          <div>
+            <label>開始時間</label>
+
+            <input
+              id="start"
+              type="time"
+            />
+          </div>
+
+
+          <!-- 結束時間 -->
+
+          <div>
+            <label>結束時間</label>
+
+            <input
+              id="end"
+              type="time"
+            />
+          </div>
+
+
+          <!-- Buy-in -->
+
+          <div>
+            <label>Buy-in</label>
+
+            <input
+              id="buyin"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+
+          <!-- Cash out -->
+
+          <div>
+            <label>Cash out</label>
+
+            <input
+              id="cashout"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+
+          <!-- 備註 -->
+
+          <div class="full">
+            <label>備註</label>
+
+            <textarea id="note"></textarea>
+          </div>
+
+        </div>
+
+
+        <!-- 操作按鈕 -->
+
+        <div
+          class="actions"
+          style="margin-top: 14px"
+        >
+          <button
+            class="primary"
+            onclick="addRecord()"
+          >
+            ＋ 新增紀錄
+          </button>
+
+          <button
+            class="secondary"
+            onclick="exportCSV()"
+          >
+            匯出 CSV
+          </button>
+
+          <button
+            class="secondary"
+            onclick="exportJSON()"
+          >
+            備份 JSON
+          </button>
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           歷史紀錄
+      ========================== -->
+
+      <div class="panel">
+
+        <div class="toolbar">
+          <h2>歷史紀錄</h2>
+
+          <div class="filters">
+
+            <select
+              id="filterType"
+              onchange="render()"
+            >
+              <option value="All">
+                全部類型
+              </option>
+
+              <option>
+                Tournament
+              </option>
+
+              <option>
+                Cash
+              </option>
+            </select>
+
+
+            <select
+              id="filterCurrency"
+              onchange="render()"
+            >
+              <option value="All">
+                全部幣別
+              </option>
+
+              <option>TWD</option>
+              <option>USD</option>
+              <option>PHP</option>
+              <option>THB</option>
+              <option>MYR</option>
+              <option>KRW</option>
+              <option>HKD</option>
+            </select>
+
+          </div>
+        </div>
+
+
+        <!-- Table -->
+
+        <div class="tablewrap">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>類型</th>
+                <th>幣別</th>
+                <th>牌局</th>
+                <th>Series</th>
+                <th>地點</th>
+                <th>時數</th>
+                <th>Buy-in</th>
+                <th>Cash out</th>
+                <th>盈虧</th>
+                <th>ROI</th>
+                <th>時薪</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody id="tbody"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         Libraries
+    ========================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <script src="config.js"></script>
+
+
+    <!-- =========================
+         Application
+    ========================== -->
+
+    <script>
+
+      /* =========================
+         基本設定
+      ========================== */
+
+      const KEY = "poker_roi_v2";
+
+      let records = JSON.parse(
+        localStorage.getItem(KEY) || "[]"
+      );
+
+      let sb = null;
+      let session = null;
+      let chart = null;
+
+
+      /* =========================
+         Helper Functions
+      ========================== */
+
+      const $ = (id) =>
+        document.getElementById(id);
+
+
+      const money = (n) =>
+        Number(n || 0).toLocaleString(
+          "zh-TW",
+          {
+            maximumFractionDigits: 2
+          }
+        );
+
+
+      const pct = (n) =>
+        isFinite(n)
+          ? Number(n).toFixed(1) + "%"
+          : "—";
+
+
+      /* =========================
+         計算遊玩時間
+      ========================== */
+
+      function hours(start, end) {
+
+        if (!start || !end) {
+          return 0;
+        }
+
+        let [startMinutes, endMinutes] =
+          [start, end].map((time) => {
+
+            let [hour, minute] =
+              time
+                .split(":")
+                .map(Number);
+
+            return hour * 60 + minute;
+
+          });
+
+
+        // 跨午夜，例如 23:00 → 03:00
+
+        if (endMinutes < startMinutes) {
+          endMinutes += 1440;
+        }
+
+
+        return (
+          endMinutes - startMinutes
+        ) / 60;
+
+      }
+
+
+      /* =========================
+         標準化紀錄
+      ========================== */
+
+      function norm(record) {
+
+        const buyin =
+          Number(record.buyin || 0);
+
+        const cashout =
+          Number(record.cashout || 0);
+
+
+        const totalHours =
+          Number(
+            record.hours ??
+              hours(
+                record.start_time ||
+                  record.start,
+
+                record.end_time ||
+                  record.end
+              )
+          );
+
+
+        const profit =
+          cashout - buyin;
+
+
+        return {
+
+          id:
+            record.id ||
+            Date.now() +
+              Math.random(),
+
+          date:
+            record.date,
+
+          type:
+            record.type ||
+            "Tournament",
+
+          currency:
+            record.currency ||
+            "TWD",
+
+          name:
+            record.name ||
+            "未命名牌局",
+
+          series:
+            record.series ||
+            "",
+
+          location:
+            record.location ||
+            "",
+
+          start:
+            record.start_time ||
+            record.start ||
+            "",
+
+          end:
+            record.end_time ||
+            record.end ||
+            "",
+
+          buyin,
+
+          cashout,
+
+          note:
+            record.note ||
+            "",
+
+          hours:
+            totalHours,
+
+          profit,
+
+          roi:
+            buyin
+              ? (profit / buyin) * 100
+              : 0,
+
+          hourly:
+            totalHours
+              ? profit / totalHours
+              : 0,
+
+          created_at:
+            record.created_at ||
+            new Date().toISOString()
+
+        };
+
+      }
+
+
+      /* =========================
+         日期
+      ========================== */
+
+      function today() {
+
+        const date =
+          new Date();
+
+        $("date").value =
+          date
+            .toISOString()
+            .slice(0, 10);
+
+      }
+
+
+      /* =========================
+         Local Storage
+      ========================== */
+
+      function save() {
+
+        localStorage.setItem(
+          KEY,
+          JSON.stringify(records)
+        );
+
+      }
+
+
+      /* =========================
+         Supabase 是否已設定
+      ========================== */
+
+      const configured =
+        window.APP_CONFIG &&
+        window.APP_CONFIG.SUPABASE_URL &&
+        !window.APP_CONFIG
+          .SUPABASE_URL
+          .includes("YOUR_");
+
+
+      /* =========================
+         初始化
+      ========================== */
+
+      async function init() {
+
+        today();
+
+
+        // 尚未設定 Supabase
+
+        if (!configured) {
+
+          $("cloudState").textContent =
+            "Cloud: 本機模式";
+
+          render();
+
+          return;
+
+        }
+
+
+        $("configWarning")
+          .classList
+          .add("hidden");
+
+
+        sb =
+          supabase.createClient(
+
+            APP_CONFIG.SUPABASE_URL,
+
+            APP_CONFIG.SUPABASE_ANON_KEY
+
+          );
+
+
+        const { data } =
+          await sb.auth.getSession();
+
+
+        session =
+          data.session;
+
+
+        ui();
+
+
+        sb.auth.onAuthStateChange(
+          async (_, newSession) => {
+
+            session =
+              newSession;
+
+            ui();
+
+
+            if (newSession) {
+
+              await load();
+
+            } else {
+
+              render();
+
+            }
+
+          }
+        );
+
+
+        if (session) {
+
+          await load();
+
+        } else {
+
+          render();
+
+        }
+
+      }
+
+
+      /* =========================
+         更新登入 UI
+      ========================== */
+
+      function ui() {
+
+        $("userState").textContent =
+          session?.user?.email ||
+          "未登入";
+
+
+        $("cloudState").textContent =
+          session
+            ? "Cloud: 已連線"
+            : "Cloud: 可用";
+
+
+        $("logoutBtn")
+          .classList
+          .toggle(
+            "hidden",
+            !session
+          );
+
+      }
+
+
+      /* =========================
+         Magic Link 登入
+      ========================== */
+
+      async function sendMagicLink() {
+
+        if (!configured) {
+
+          alert(
+            "先設定 config.js"
+          );
+
+          return;
+
+        }
+
+
+        const email =
+          $("email")
+            .value
+            .trim();
+
+
+        if (!email) {
+
+          alert(
+            "請輸入 Email"
+          );
+
+          return;
+
+        }
+
+
+        const { error } =
+          await sb.auth.signInWithOtp({
+
+            email,
+
+            options: {
+
+              emailRedirectTo:
+                location.origin +
+                location.pathname
+
+            }
+
+          });
+
+
+        alert(
+          error
+            ? error.message
+            : "登入連結已寄出"
+        );
+
+      }
+
+
+      /* =========================
+         登出
+      ========================== */
+
+      async function signOut() {
+
+        await sb.auth.signOut();
+
+      }
+
+
+      /* =========================
+         載入 Supabase 紀錄
+      ========================== */
+
+      async function load() {
+
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from(
+              "poker_sessions"
+            )
+            .select("*")
+            .order(
+              "date",
+              {
+                ascending: false
+              }
+            );
+
+
+        if (error) {
+
+          alert(
+            error.message
+          );
+
+          return;
+
+        }
+
+
+        records =
+          (data || [])
+            .map(norm);
+
+
+        save();
+
+        render();
+
+      }
+
+
+      /* =========================
+         新增紀錄
+      ========================== */
+
+      async function addRecord() {
+
+        const record =
+          norm({
+
+            date:
+              $("date").value,
+
+            type:
+              $("type").value,
+
+            currency:
+              $("currency").value,
+
+            name:
+              $("name")
+                .value
+                .trim(),
+
+            series:
+              $("series")
+                .value
+                .trim(),
+
+            location:
+              $("location")
+                .value
+                .trim(),
+
+            start:
+              $("start").value,
+
+            end:
+              $("end").value,
+
+            buyin:
+              $("buyin").value,
+
+            cashout:
+              $("cashout").value,
+
+            note:
+              $("note")
+                .value
+                .trim()
+
+          });
+
+
+        if (!record.date) {
+
+          alert(
+            "請填日期"
+          );
+
+          return;
+
+        }
+
+
+        /* 雲端模式 */
+
+        if (session) {
+
+          const payload = {
+
+            user_id:
+              session.user.id,
+
+            date:
+              record.date,
+
+            type:
+              record.type,
+
+            currency:
+              record.currency,
+
+            name:
+              record.name,
+
+            series:
+              record.series,
+
+            location:
+              record.location,
+
+            start_time:
+              record.start ||
+              null,
+
+            end_time:
+              record.end ||
+              null,
+
+            buyin:
+              record.buyin,
+
+            cashout:
+              record.cashout,
+
+            note:
+              record.note
+
+          };
+
+
+          const { error } =
+            await sb
+              .from(
+                "poker_sessions"
+              )
+              .insert(
+                payload
+              );
+
+
+          if (error) {
+
+            alert(
+              error.message
+            );
+
+            return;
+
+          }
+
+
+          await load();
+
+        }
+
+
+        /* 本機模式 */
+
+        else {
+
+          records.unshift(
+            record
+          );
+
+          save();
+
+          render();
+
+        }
+
+
+        /* 清空表單 */
+
+        [
+          "name",
+          "series",
+          "location",
+          "start",
+          "end",
+          "buyin",
+          "cashout",
+          "note"
+        ].forEach(
+          (id) => {
+
+            $(id).value = "";
+
+          }
+        );
+
+      }
+
+
+      /* =========================
+         刪除紀錄
+      ========================== */
+
+      async function del(id) {
+
+        if (
+          !confirm(
+            "確定刪除？"
+          )
+        ) {
+          return;
+        }
+
+
+        /* Supabase */
+
+        if (
+          session &&
+          typeof id === "string"
+        ) {
+
+          const { error } =
+            await sb
+              .from(
+                "poker_sessions"
+              )
+              .delete()
+              .eq(
+                "id",
+                id
+              );
+
+
+          if (error) {
+
+            alert(
+              error.message
+            );
+
+            return;
+
+          }
+
+
+          await load();
+
+        }
+
+
+        /* Local */
+
+        else {
+
+          records =
+            records.filter(
+              (record) =>
+                record.id !== id
+            );
+
+
+          save();
+
+          render();
+
+        }
+
+      }
+
+
+      /* =========================
+         篩選
+      ========================== */
+
+      function filtered() {
+
+        return records.filter(
+          (record) => {
+
+            const typeMatch =
+              $("filterType").value ===
+                "All" ||
+              record.type ===
+                $("filterType").value;
+
+
+            const currencyMatch =
+              $("filterCurrency").value ===
+                "All" ||
+              record.currency ===
+                $("filterCurrency").value;
+
+
+            return (
+              typeMatch &&
+              currencyMatch
+            );
+
+          }
+        );
+
+      }
+
+
+      /* =========================
+         Render
+      ========================== */
+
+      function render() {
+
+        const data =
+          filtered();
+
+
+        const tbody =
+          $("tbody");
+
+
+        /* -------------------------
+           歷史紀錄 Table
+        -------------------------- */
+
+        if (data.length) {
+
+          tbody.innerHTML =
+            data
+              .map(
+                (record) => {
+
+                  return `
+                    <tr>
+
+                      <td>
+                        ${record.date}
+                      </td>
+
+                      <td>
+                        ${record.type}
+                      </td>
+
+                      <td>
+                        ${record.currency}
+                      </td>
+
+                      <td>
+                        ${record.name}
+                      </td>
+
+                      <td>
+                        ${record.series || "—"}
+                      </td>
+
+                      <td>
+                        ${record.location || "—"}
+                      </td>
+
+                      <td>
+                        ${
+                          record.hours
+                            ? record.hours.toFixed(2) +
+                              "h"
+                            : "—"
+                        }
+                      </td>
+
+                      <td>
+                        ${money(record.buyin)}
+                      </td>
+
+                      <td>
+                        ${money(record.cashout)}
+                      </td>
+
+                      <td
+                        class="${
+                          record.profit > 0
+                            ? "good"
+                            : record.profit < 0
+                              ? "bad"
+                              : ""
+                        }"
+                      >
+                        ${
+                          record.profit >= 0
+                            ? "+"
+                            : ""
+                        }${money(record.profit)}
+                      </td>
+
+                      <td>
+                        ${pct(record.roi)}
+                      </td>
+
+                      <td>
+                        ${
+                          record.hours
+                            ? money(record.hourly)
+                            : "—"
+                        }
+                      </td>
+
+                      <td>
+
+                        <button
+                          class="danger"
+                          onclick='del(${JSON.stringify(
+                            record.id
+                          )})'
+                        >
+                          刪除
+                        </button>
+
+                      </td>
+
+                    </tr>
+                  `;
+
+                }
+              )
+              .join("");
+
+        } else {
+
+          tbody.innerHTML = `
+            <tr>
+              <td
+                colspan="13"
+                class="muted"
+              >
+                目前沒有紀錄
+              </td>
+            </tr>
+          `;
+
+        }
+
+
+        /* -------------------------
+           統計
+        -------------------------- */
+
+        const totalBuyin =
+          data.reduce(
+            (sum, record) =>
+              sum +
+              record.buyin,
+            0
+          );
+
+
+        const totalCashout =
+          data.reduce(
+            (sum, record) =>
+              sum +
+              record.cashout,
+            0
+          );
+
+
+        const totalProfit =
+          totalCashout -
+          totalBuyin;
+
+
+        const totalHours =
+          data.reduce(
+            (sum, record) =>
+              sum +
+              record.hours,
+            0
+          );
+
+
+        /* 累積盈虧 */
+
+        $("sProfit").textContent =
+          (
+            totalProfit >= 0
+              ? "+"
+              : ""
+          ) +
+          money(totalProfit);
+
+
+        /* Buy-in */
+
+        $("sBuyin").textContent =
+          money(totalBuyin);
+
+
+        /* Cash out */
+
+        $("sCashout").textContent =
+          money(totalCashout);
+
+
+        /* ROI */
+
+        $("sRoi").textContent =
+          pct(
+            totalBuyin
+              ? (
+                  totalProfit /
+                  totalBuyin
+                ) * 100
+              : 0
+          );
+
+
+        /* 總時數 */
+
+        $("sHours").textContent =
+          totalHours.toFixed(2) +
+          "h";
+
+
+        /* 時薪 */
+
+        $("sHourly").textContent =
+          money(
+            totalHours
+              ? totalProfit /
+                totalHours
+              : 0
+          );
+
+
+        /* 盈利局率 */
+
+        const winningSessions =
+          data.filter(
+            (record) =>
+              record.profit > 0
+          ).length;
+
+
+        $("sWinRate").textContent =
+          pct(
+            data.length
+              ? (
+                  winningSessions /
+                  data.length
+                ) * 100
+              : 0
+          );
+
+
+        /* 紀錄數 */
+
+        $("sCount").textContent =
+          data.length;
+
+
+        /* Chart */
+
+        draw(data);
+
+      }
+
+
+      /* =========================
+         盈虧曲線
+      ========================== */
+
+      function draw(data) {
+
+        const sorted =
+          [...data].sort(
+            (a, b) =>
+              a.date.localeCompare(
+                b.date
+              )
+          );
+
+
+        let cumulative = 0;
+
+
+        const chartData =
+          sorted.map(
+            (record) => {
+
+              cumulative +=
+                record.profit;
+
+              return cumulative;
+
+            }
+          );
+
+
+        const labels =
+          sorted.map(
+            (record) =>
+              record.date
+          );
+
+
+        const currencies =
+          [
+            ...new Set(
+              sorted.map(
+                (record) =>
+                  record.currency
+              )
+            )
+          ];
+
+
+        $("chartCurrency").textContent =
+          currencies.length === 1
+            ? "幣別：" +
+              currencies[0]
+            : "混合幣別時僅做數值加總";
+
+
+        if (chart) {
+
+          chart.destroy();
+
+        }
+
+
+        chart =
+          new Chart(
+            $("profitChart"),
+            {
+
+              type: "line",
+
+              data: {
+
+                labels,
+
+                datasets: [
+
+                  {
+
+                    label:
+                      "累積盈虧",
+
+                    data:
+                      chartData,
+
+                    tension:
+                      0.25,
+
+                    borderWidth:
+                      2
+
+                  }
+
+                ]
+
+              },
+
+              options: {
+
+                responsive:
+                  true,
+
+                maintainAspectRatio:
+                  false
+
+              }
+
+            }
+          );
+
+      }
+
+
+      /* =========================
+         Download
+      ========================== */
+
+      function downloadFile(
+        content,
+        filename,
+        type
+      ) {
+
+        const blob =
+          new Blob(
+            [content],
+            {
+              type
+            }
+          );
+
+
+        const url =
+          URL.createObjectURL(
+            blob
+          );
+
+
+        const link =
+          document.createElement(
+            "a"
+          );
+
+
+        link.href =
+          url;
+
+        link.download =
+          filename;
+
+
+        link.click();
+
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      }
+
+
+      /* =========================
+         JSON 備份
+      ========================== */
+
+      function exportJSON() {
+
+        downloadFile(
+
+          JSON.stringify(
+            records,
+            null,
+            2
+          ),
+
+          "poker_roi_backup.json",
+
+          "application/json"
+
+        );
+
+      }
+
+
+      /* =========================
+         CSV 匯出
+      ========================== */
+
+      function exportCSV() {
+
+        const header = [
+
+          "日期",
+          "類型",
+          "幣別",
+          "牌局",
+          "Series",
+          "地點",
+          "時數",
+          "Buy-in",
+          "Cash out",
+          "盈虧",
+          "ROI%",
+          "時薪"
+
+        ];
+
+
+        const rows =
+          filtered().map(
+            (record) => [
+
+              record.date,
+              record.type,
+              record.currency,
+              record.name,
+              record.series,
+              record.location,
+              record.hours,
+              record.buyin,
+              record.cashout,
+              record.profit,
+              record.roi,
+              record.hourly
+
+            ]
+          );
+
+
+        const csv =
+          "\uFEFF" +
+          [
+            header,
+            ...rows
+          ]
+            .map(
+              (row) =>
+
+                row
+                  .map(
+                    (value) =>
+                      '"' +
+                      String(
+                        value ?? ""
+                      ).replaceAll(
+                        '"',
+                        '""'
+                      ) +
+                      '"'
+                  )
+                  .join(",")
+
+            )
+            .join("\n");
+
+
+        downloadFile(
+
+          csv,
+
+          "poker_roi_records.csv",
+
+          "text/csv;charset=utf-8"
+
+        );
+
+      }
+
+
+      /* =========================
+         Service Worker
+      ========================== */
+
+      if (
+        "serviceWorker" in navigator
+      ) {
+
+        navigator
+          .serviceWorker
+          .register(
+            "./service-worker.js"
+          )
+          .catch(
+            () => {}
+          );
+
+      }
+
+
+      /* =========================
+         啟動
+      ========================== */
+
+      init();
+
+    </script>
+  </body>
+</html>
