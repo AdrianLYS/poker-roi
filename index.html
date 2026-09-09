@@ -130,6 +130,11 @@
         cursor: pointer;
       }
 
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
       .primary {
         background: var(--accent);
       }
@@ -223,9 +228,7 @@
   <body>
     <div class="wrap">
 
-      <!-- =========================
-           Header
-      ========================== -->
+      <!-- Header -->
 
       <div class="top">
         <div>
@@ -247,10 +250,7 @@
         </div>
       </div>
 
-
-      <!-- =========================
-           Supabase 設定提示
-      ========================== -->
+      <!-- Supabase 設定提示 -->
 
       <div id="configWarning" class="config">
         尚未設定 Supabase。先在
@@ -258,10 +258,7 @@
         填入 SUPABASE_URL 與 SUPABASE_ANON_KEY；未設定前仍可使用本機模式。
       </div>
 
-
-      <!-- =========================
-           登入 / 雲端同步
-      ========================== -->
+      <!-- 登入 / 雲端同步 -->
 
       <div class="panel">
         <div class="toolbar">
@@ -277,6 +274,7 @@
 
             <button
               class="primary"
+              id="magicLinkBtn"
               onclick="sendMagicLink()"
             >
               寄登入連結
@@ -297,108 +295,58 @@
         </div>
       </div>
 
-
-      <!-- =========================
-           統計數據
-      ========================== -->
+      <!-- 統計數據 -->
 
       <div class="grid">
 
         <div class="stat">
-          <div class="label">
-            Bankroll / 累積盈虧
-          </div>
-
-          <div class="value" id="sProfit">
-            0
-          </div>
+          <div class="label">Bankroll / 累積盈虧</div>
+          <div class="value" id="sProfit">0</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            總 Buy-in
-          </div>
-
-          <div class="value" id="sBuyin">
-            0
-          </div>
+          <div class="label">總 Buy-in</div>
+          <div class="value" id="sBuyin">0</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            總 Cash out
-          </div>
-
-          <div class="value" id="sCashout">
-            0
-          </div>
+          <div class="label">總 Cash out</div>
+          <div class="value" id="sCashout">0</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            整體 ROI
-          </div>
-
-          <div class="value" id="sRoi">
-            0%
-          </div>
+          <div class="label">整體 ROI</div>
+          <div class="value" id="sRoi">0%</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            總時數
-          </div>
-
-          <div class="value" id="sHours">
-            0h
-          </div>
+          <div class="label">總時數</div>
+          <div class="value" id="sHours">0h</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            平均時薪
-          </div>
-
-          <div class="value" id="sHourly">
-            0
-          </div>
+          <div class="label">平均時薪</div>
+          <div class="value" id="sHourly">0</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            盈利局率
-          </div>
-
-          <div class="value" id="sWinRate">
-            0%
-          </div>
+          <div class="label">盈利局率</div>
+          <div class="value" id="sWinRate">0%</div>
         </div>
 
         <div class="stat">
-          <div class="label">
-            紀錄筆數
-          </div>
-
-          <div class="value" id="sCount">
-            0
-          </div>
+          <div class="label">紀錄筆數</div>
+          <div class="value" id="sCount">0</div>
         </div>
 
       </div>
 
-
-      <!-- =========================
-           盈虧曲線
-      ========================== -->
+      <!-- 盈虧曲線 -->
 
       <div class="panel">
         <div class="toolbar">
           <h2>累積盈虧曲線</h2>
-
-          <span
-            class="pill"
-            id="chartCurrency"
-          ></span>
+          <span class="pill" id="chartCurrency"></span>
         </div>
 
         <div class="chartbox">
@@ -406,48 +354,30 @@
         </div>
       </div>
 
-
-      <!-- =========================
-           新增紀錄
-      ========================== -->
+      <!-- 新增紀錄 -->
 
       <div class="panel">
-
         <div class="toolbar">
           <h2>新增紀錄</h2>
         </div>
 
         <div class="formgrid">
 
-          <!-- 日期 -->
-
           <div>
             <label>日期</label>
-
-            <input
-              id="date"
-              type="date"
-            />
+            <input id="date" type="date" />
           </div>
-
-
-          <!-- 類型 -->
 
           <div>
             <label>類型</label>
-
             <select id="type">
               <option>Tournament</option>
               <option>Cash</option>
             </select>
           </div>
 
-
-          <!-- 幣別 -->
-
           <div>
             <label>幣別</label>
-
             <select id="currency">
               <option>TWD</option>
               <option>USD</option>
@@ -459,66 +389,36 @@
             </select>
           </div>
 
-
-          <!-- 牌局名稱 -->
-
           <div class="full">
             <label>賽事／牌局名稱</label>
-
             <input
               id="name"
               placeholder="APPT Manila Main Event / 50-100 Cash"
             />
           </div>
 
-
-          <!-- Series -->
-
           <div>
             <label>Series</label>
-
             <input id="series" />
           </div>
 
-
-          <!-- 地點 -->
-
           <div>
             <label>地點</label>
-
             <input id="location" />
           </div>
 
-
-          <!-- 開始時間 -->
-
           <div>
             <label>開始時間</label>
-
-            <input
-              id="start"
-              type="time"
-            />
+            <input id="start" type="time" />
           </div>
-
-
-          <!-- 結束時間 -->
 
           <div>
             <label>結束時間</label>
-
-            <input
-              id="end"
-              type="time"
-            />
+            <input id="end" type="time" />
           </div>
-
-
-          <!-- Buy-in -->
 
           <div>
             <label>Buy-in</label>
-
             <input
               id="buyin"
               type="number"
@@ -527,12 +427,8 @@
             />
           </div>
 
-
-          <!-- Cash out -->
-
           <div>
             <label>Cash out</label>
-
             <input
               id="cashout"
               type="number"
@@ -541,19 +437,12 @@
             />
           </div>
 
-
-          <!-- 備註 -->
-
           <div class="full">
             <label>備註</label>
-
             <textarea id="note"></textarea>
           </div>
 
         </div>
-
-
-        <!-- 操作按鈕 -->
 
         <div
           class="actions"
@@ -580,16 +469,11 @@
             備份 JSON
           </button>
         </div>
-
       </div>
 
-
-      <!-- =========================
-           歷史紀錄
-      ========================== -->
+      <!-- 歷史紀錄 -->
 
       <div class="panel">
-
         <div class="toolbar">
           <h2>歷史紀錄</h2>
 
@@ -599,28 +483,16 @@
               id="filterType"
               onchange="render()"
             >
-              <option value="All">
-                全部類型
-              </option>
-
-              <option>
-                Tournament
-              </option>
-
-              <option>
-                Cash
-              </option>
+              <option value="All">全部類型</option>
+              <option>Tournament</option>
+              <option>Cash</option>
             </select>
-
 
             <select
               id="filterCurrency"
               onchange="render()"
             >
-              <option value="All">
-                全部幣別
-              </option>
-
+              <option value="All">全部幣別</option>
               <option>TWD</option>
               <option>USD</option>
               <option>PHP</option>
@@ -633,13 +505,8 @@
           </div>
         </div>
 
-
-        <!-- Table -->
-
         <div class="tablewrap">
-
           <table>
-
             <thead>
               <tr>
                 <th>日期</th>
@@ -659,36 +526,21 @@
             </thead>
 
             <tbody id="tbody"></tbody>
-
           </table>
-
         </div>
-
       </div>
 
     </div>
 
-
-    <!-- =========================
-         Libraries
-    ========================== -->
+    <!-- Libraries -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-
     <script src="config.js"></script>
 
-
-    <!-- =========================
-         Application
-    ========================== -->
+    <!-- Application -->
 
     <script>
-
-      /* =========================
-         基本設定
-      ========================== */
 
       const KEY = "poker_roi_v2";
 
@@ -699,15 +551,10 @@
       let sb = null;
       let session = null;
       let chart = null;
-
-
-      /* =========================
-         Helper Functions
-      ========================== */
+      let magicLinkCooldownTimer = null;
 
       const $ = (id) =>
         document.getElementById(id);
-
 
       const money = (n) =>
         Number(n || 0).toLocaleString(
@@ -716,7 +563,6 @@
             maximumFractionDigits: 2
           }
         );
-
 
       const pct = (n) =>
         isFinite(n)
@@ -746,13 +592,9 @@
 
           });
 
-
-        // 跨午夜，例如 23:00 → 03:00
-
         if (endMinutes < startMinutes) {
           endMinutes += 1440;
         }
-
 
         return (
           endMinutes - startMinutes
@@ -773,7 +615,6 @@
         const cashout =
           Number(record.cashout || 0);
 
-
         const totalHours =
           Number(
             record.hours ??
@@ -786,10 +627,8 @@
               )
           );
 
-
         const profit =
           cashout - buyin;
-
 
         return {
 
@@ -914,9 +753,6 @@
 
         today();
 
-
-        // 尚未設定 Supabase
-
         if (!configured) {
 
           $("cloudState").textContent =
@@ -928,11 +764,9 @@
 
         }
 
-
         $("configWarning")
           .classList
           .add("hidden");
-
 
         sb =
           supabase.createClient(
@@ -943,17 +777,13 @@
 
           );
 
-
         const { data } =
           await sb.auth.getSession();
-
 
         session =
           data.session;
 
-
         ui();
-
 
         sb.auth.onAuthStateChange(
           async (_, newSession) => {
@@ -962,7 +792,6 @@
               newSession;
 
             ui();
-
 
             if (newSession) {
 
@@ -976,7 +805,6 @@
 
           }
         );
-
 
         if (session) {
 
@@ -1001,12 +829,10 @@
           session?.user?.email ||
           "未登入";
 
-
         $("cloudState").textContent =
           session
             ? "Cloud: 已連線"
             : "Cloud: 可用";
-
 
         $("logoutBtn")
           .classList
@@ -1022,6 +848,66 @@
          Magic Link 登入
       ========================== */
 
+      function startMagicLinkCooldown(seconds = 60) {
+
+        const button =
+          $("magicLinkBtn");
+
+        if (!button) {
+          return;
+        }
+
+        if (magicLinkCooldownTimer) {
+
+          clearInterval(
+            magicLinkCooldownTimer
+          );
+
+        }
+
+        let remaining =
+          seconds;
+
+        button.disabled =
+          true;
+
+        button.textContent =
+          `${remaining} 秒後可重新寄送`;
+
+        magicLinkCooldownTimer =
+          setInterval(
+            () => {
+
+              remaining -= 1;
+
+              if (remaining <= 0) {
+
+                clearInterval(
+                  magicLinkCooldownTimer
+                );
+
+                magicLinkCooldownTimer =
+                  null;
+
+                button.disabled =
+                  false;
+
+                button.textContent =
+                  "寄登入連結";
+
+                return;
+              }
+
+              button.textContent =
+                `${remaining} 秒後可重新寄送`;
+
+            },
+            1000
+          );
+
+      }
+
+
       async function sendMagicLink() {
 
         if (!configured) {
@@ -1034,12 +920,10 @@
 
         }
 
-
         const email =
           $("email")
             .value
             .trim();
-
 
         if (!email) {
 
@@ -1051,28 +935,97 @@
 
         }
 
+        const button =
+          $("magicLinkBtn");
 
-        const { error } =
-          await sb.auth.signInWithOtp({
+        if (button?.disabled) {
+          return;
+        }
 
-            email,
+        button.disabled =
+          true;
 
-            options: {
+        button.textContent =
+          "寄送中...";
 
-              emailRedirectTo:
-                location.origin +
-                location.pathname
+        try {
+
+          const { error } =
+            await sb.auth.signInWithOtp({
+
+              email,
+
+              options: {
+
+                emailRedirectTo:
+                  location.origin +
+                  location.pathname
+
+              }
+
+            });
+
+          if (error) {
+
+            button.disabled =
+              false;
+
+            button.textContent =
+              "寄登入連結";
+
+            const errorMessage =
+              error.message ||
+              "";
+
+            if (
+              errorMessage
+                .toLowerCase()
+                .includes("rate limit") ||
+              errorMessage
+                .toLowerCase()
+                .includes("rate_limit") ||
+              errorMessage
+                .toLowerCase()
+                .includes("too many")
+            ) {
+
+              alert(
+                "寄送次數太頻繁，Supabase 暫時限制寄信。請稍後再試。"
+              );
+
+            } else {
+
+              alert(
+                errorMessage
+              );
 
             }
 
-          });
+            return;
 
+          }
 
-        alert(
-          error
-            ? error.message
-            : "登入連結已寄出"
-        );
+          startMagicLinkCooldown(
+            60
+          );
+
+          alert(
+            "登入連結已寄出，請查看最新一封 Email。60 秒後才能再次寄送。"
+          );
+
+        } catch (error) {
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            "寄登入連結";
+
+          alert(
+            "寄送登入連結時發生錯誤，請稍後再試。"
+          );
+
+        }
 
       }
 
@@ -1110,7 +1063,6 @@
               }
             );
 
-
         if (error) {
 
           alert(
@@ -1121,11 +1073,9 @@
 
         }
 
-
         records =
           (data || [])
             .map(norm);
-
 
         save();
 
@@ -1186,7 +1136,6 @@
 
           });
 
-
         if (!record.date) {
 
           alert(
@@ -1196,9 +1145,6 @@
           return;
 
         }
-
-
-        /* 雲端模式 */
 
         if (session) {
 
@@ -1244,7 +1190,6 @@
 
           };
 
-
           const { error } =
             await sb
               .from(
@@ -1253,7 +1198,6 @@
               .insert(
                 payload
               );
-
 
           if (error) {
 
@@ -1265,15 +1209,9 @@
 
           }
 
-
           await load();
 
-        }
-
-
-        /* 本機模式 */
-
-        else {
+        } else {
 
           records.unshift(
             record
@@ -1284,9 +1222,6 @@
           render();
 
         }
-
-
-        /* 清空表單 */
 
         [
           "name",
@@ -1322,9 +1257,6 @@
           return;
         }
 
-
-        /* Supabase */
-
         if (
           session &&
           typeof id === "string"
@@ -1341,7 +1273,6 @@
                 id
               );
 
-
           if (error) {
 
             alert(
@@ -1352,22 +1283,15 @@
 
           }
 
-
           await load();
 
-        }
-
-
-        /* Local */
-
-        else {
+        } else {
 
           records =
             records.filter(
               (record) =>
                 record.id !== id
             );
-
 
           save();
 
@@ -1393,13 +1317,11 @@
               record.type ===
                 $("filterType").value;
 
-
             const currencyMatch =
               $("filterCurrency").value ===
                 "All" ||
               record.currency ===
                 $("filterCurrency").value;
-
 
             return (
               typeMatch &&
@@ -1421,14 +1343,8 @@
         const data =
           filtered();
 
-
         const tbody =
           $("tbody");
-
-
-        /* -------------------------
-           歷史紀錄 Table
-        -------------------------- */
 
         if (data.length) {
 
@@ -1544,11 +1460,6 @@
 
         }
 
-
-        /* -------------------------
-           統計
-        -------------------------- */
-
         const totalBuyin =
           data.reduce(
             (sum, record) =>
@@ -1556,7 +1467,6 @@
               record.buyin,
             0
           );
-
 
         const totalCashout =
           data.reduce(
@@ -1566,11 +1476,9 @@
             0
           );
 
-
         const totalProfit =
           totalCashout -
           totalBuyin;
-
 
         const totalHours =
           data.reduce(
@@ -1580,9 +1488,6 @@
             0
           );
 
-
-        /* 累積盈虧 */
-
         $("sProfit").textContent =
           (
             totalProfit >= 0
@@ -1591,20 +1496,11 @@
           ) +
           money(totalProfit);
 
-
-        /* Buy-in */
-
         $("sBuyin").textContent =
           money(totalBuyin);
 
-
-        /* Cash out */
-
         $("sCashout").textContent =
           money(totalCashout);
-
-
-        /* ROI */
 
         $("sRoi").textContent =
           pct(
@@ -1616,15 +1512,9 @@
               : 0
           );
 
-
-        /* 總時數 */
-
         $("sHours").textContent =
           totalHours.toFixed(2) +
           "h";
-
-
-        /* 時薪 */
 
         $("sHourly").textContent =
           money(
@@ -1634,15 +1524,11 @@
               : 0
           );
 
-
-        /* 盈利局率 */
-
         const winningSessions =
           data.filter(
             (record) =>
               record.profit > 0
           ).length;
-
 
         $("sWinRate").textContent =
           pct(
@@ -1654,14 +1540,8 @@
               : 0
           );
 
-
-        /* 紀錄數 */
-
         $("sCount").textContent =
           data.length;
-
-
-        /* Chart */
 
         draw(data);
 
@@ -1682,9 +1562,7 @@
               )
           );
 
-
         let cumulative = 0;
-
 
         const chartData =
           sorted.map(
@@ -1698,13 +1576,11 @@
             }
           );
 
-
         const labels =
           sorted.map(
             (record) =>
               record.date
           );
-
 
         const currencies =
           [
@@ -1716,20 +1592,17 @@
             )
           ];
 
-
         $("chartCurrency").textContent =
           currencies.length === 1
             ? "幣別：" +
               currencies[0]
             : "混合幣別時僅做數值加總";
 
-
         if (chart) {
 
           chart.destroy();
 
         }
-
 
         chart =
           new Chart(
@@ -1798,18 +1671,15 @@
             }
           );
 
-
         const url =
           URL.createObjectURL(
             blob
           );
 
-
         const link =
           document.createElement(
             "a"
           );
-
 
         link.href =
           url;
@@ -1817,9 +1687,7 @@
         link.download =
           filename;
 
-
         link.click();
-
 
         URL.revokeObjectURL(
           url
@@ -1874,7 +1742,6 @@
 
         ];
 
-
         const rows =
           filtered().map(
             (record) => [
@@ -1894,7 +1761,6 @@
 
             ]
           );
-
 
         const csv =
           "\uFEFF" +
@@ -1921,7 +1787,6 @@
 
             )
             .join("\n");
-
 
         downloadFile(
 
