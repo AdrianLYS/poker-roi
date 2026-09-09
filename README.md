@@ -1,18 +1,98 @@
-# Poker ROI Tracker Cloud v2
+# ♠ Poker ROI Tracker
 
-功能：GitHub Pages 免費部署、Supabase 雲端同步、Email Magic Link 登入、Tournament / Cash 分類、幣別、Series、地點、Bankroll、ROI、總時數、平均時薪、盈虧曲線、CSV/JSON 匯出。
+一個為德州撲克玩家設計的 ROI、盈虧與參賽紀錄管理工具。
 
-## Supabase
-1. 建立免費 Project。
-2. SQL Editor 執行 `supabase.sql`。
-3. 在 Project Settings / API 複製 Project URL 與 anon/public key。
-4. 填入 `config.js`。請勿使用 service_role key。
-5. Authentication > URL Configuration：Site URL 設為你的 GitHub Pages 網址；Redirect URLs 加入同網址 `/**`。
+> 無限進步·Adrian Lam
 
-## GitHub Pages
-1. 建立 repo，例如 `poker-roi`。
-2. 將本資料夾所有檔案上傳到 repo 根目錄。
-3. Settings > Pages > Deploy from a branch > main / root。
-4. 網址通常為 `https://你的帳號.github.io/poker-roi/`。
+## 🌐 Live Website
 
-登入同一 Email 的不同裝置會看到同一份資料。
+https://adrianlys.github.io/poker-roi/
+
+## ✨ Features
+
+- Email 帳號登入
+- 跨裝置雲端同步
+- 錦標賽／現金局紀錄
+- 大賽名稱與賽事名稱記憶
+- Buy-in / Cash out 紀錄
+- 自動計算盈虧
+- 自動計算 ROI
+- 總參賽次數統計
+- 累積盈虧曲線
+- 單獨大賽盈虧曲線
+- 單獨賽事盈虧曲線
+- 多幣別紀錄
+- 外幣自動換算 TWD
+- CSV 匯出
+- JSON 備份
+- 雲端資料儲存
+
+## 💱 Supported Currencies
+
+目前支援：
+
+- TWD｜台幣
+- KRW｜韓元
+- PHP｜菲律賓披索
+- MYR｜馬來西亞令吉
+
+外幣紀錄可依對應日期匯率換算為 TWD，方便統一統計不同國家賽事的實際盈虧。
+
+## 📊 Example
+
+**大賽**
+
+APT
+
+**賽事**
+
+Mystery Bounty Day 1A
+
+**Buy-in**
+
+TWD 15,000
+
+**Cash out**
+
+TWD 30,000
+
+**Profit**
+
++ TWD 15,000
+
+**ROI**
+
+100%
+
+系統會自動將紀錄納入整體 ROI、累積盈虧以及相關大賽／賽事的統計圖表。
+
+## 🔐 Privacy & Security
+
+使用者資料採帳號區分及權限控制。
+
+每位玩家登入後，只能透過一般使用介面存取自己的 Poker 紀錄。
+
+敏感憑證不應儲存在公開的前端程式碼或 GitHub Repository 中。
+
+## 🛠️ Built With
+
+- HTML
+- CSS
+- JavaScript
+- Chart.js
+- Supabase
+- GitHub Pages
+
+## 📱 Follow
+
+YouTube  
+@gray.pokerlife
+
+Instagram  
+@gray.pokerlife
+
+## 👨‍💻 Developer
+
+**Designed & Developed by Adrian Lam**
+
+© 2026 Poker ROI Tracker
