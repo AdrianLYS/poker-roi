@@ -56,6 +56,22 @@
       font-size: 12px;
     }
 
+    .account-bar {
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .account-status, .account-actions {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .account-actions { flex-wrap:nowrap; }
+    .account-actions button { white-space:nowrap; }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -244,10 +260,11 @@
     .social-card:hover { transform:translateY(-1px); filter:brightness(1.06); }
     .social-card.youtube { background:linear-gradient(135deg,rgba(255,0,0,.92),rgba(155,0,0,.94)); border:1px solid rgba(255,255,255,.18); }
     .social-card.instagram { background:linear-gradient(135deg,#833ab4 0%,#c13584 36%,#e1306c 58%,#fd1d1d 76%,#fcb045 100%); border:1px solid rgba(255,255,255,.18); }
-    .social-card-main { display:flex; align-items:center; gap:9px; min-width:0; }
+    .social-card-main { display:flex; align-items:center; gap:9px; min-width:0; flex:1 1 auto; overflow:hidden; }
     .social-icon { width:34px; height:34px; display:grid; place-items:center; flex:0 0 34px; }
     .social-icon svg { width:30px; height:30px; display:block; }
-    .social-title { font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .social-copy { min-width:0; flex:1 1 auto; overflow:hidden; }
+    .social-title { display:block; max-width:100%; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .social-handle { color:rgba(255,255,255,.78); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .social-cta { padding:6px 8px; border-radius:8px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.18); font-size:11px; font-weight:800; white-space:nowrap; }
 
@@ -287,7 +304,26 @@
     .nickname-dialog p { margin:0 0 14px; color:var(--muted); font-size:13px; }
     .nickname-dialog input { width:100%; }
     .nickname-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
-    @media (max-width:600px) { h1 { font-size:18px; } .player-greeting { align-items:flex-start; padding:15px; } .greeting-line { font-size:20px; } .nickname-edit { padding:7px 9px; } }
+    @media (max-width:600px) {
+      h1 { font-size:17px; }
+      .top { display:block; }
+      .player-greeting { align-items:flex-start; padding:15px; }
+      .greeting-line { font-size:20px; }
+      .account-bar { width:100%; margin-top:12px; display:grid; grid-template-columns:1fr; gap:8px; }
+      .account-status { width:100%; gap:6px; }
+      .account-status .pill { min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      #userState { flex:1 1 auto; }
+      .account-actions { width:100%; justify-content:flex-end; gap:7px; }
+      .account-actions button { padding:9px 11px; font-size:12px; }
+      .nickname-edit { padding:9px 11px; }
+      .social-promo { gap:7px; }
+      .social-card { padding:8px 7px; gap:6px; overflow:hidden; }
+      .social-card-main { gap:6px; }
+      .social-icon { width:28px; height:28px; flex-basis:28px; }
+      .social-icon svg { width:27px; height:27px; }
+      .social-title { font-size:10.5px; }
+      .social-handle { font-size:9.5px; }
+    }
 
     @media (max-width: 850px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
@@ -317,18 +353,15 @@
         </div>
       </div>
 
-      <div>
-        <span class="pill" id="cloudState">Cloud: 未連線</span>
-        <span class="pill" id="userState">未登入</span>
-      <button class="secondary nickname-edit hidden" id="nicknameEditBtn" type="button" style="margin-left:8px">✎ 修改暱稱</button>
-      <button
-        class="secondary hidden"
-        id="topLogoutBtn"
-        onclick="signOut()"
-        style="margin-left:8px"
-      >
-        登出
-      </button>
+      <div class="account-bar">
+        <div class="account-status">
+          <span class="pill" id="cloudState">Cloud: 未連線</span>
+          <span class="pill" id="userState">未登入</span>
+        </div>
+        <div class="account-actions">
+          <button class="secondary nickname-edit hidden" id="nicknameEditBtn" type="button">✎ 修改暱稱</button>
+          <button class="secondary hidden" id="topLogoutBtn" onclick="signOut()" type="button">登出</button>
+        </div>
       </div>
     </div>
 
@@ -341,7 +374,7 @@
               <path d="M20 17.5 32 24 20 30.5Z" fill="#ff0000"/>
             </svg>
           </div>
-          <div><div class="social-title">YouTube｜錦標賽怎麼教我作人</div><div class="social-handle">@gray.pokerlife</div></div>
+          <div class="social-copy"><div class="social-title">YouTube｜錦標賽怎麼教我作人</div><div class="social-handle">@gray.pokerlife</div></div>
         </div>
         <div class="social-cta">訂閱</div>
       </a>
@@ -354,7 +387,7 @@
               <circle cx="34.5" cy="13.5" r="2.4" fill="#fff"/>
             </svg>
           </div>
-          <div><div class="social-title">Instagram｜Gray Pokerlife</div><div class="social-handle">@gray.pokerlife</div></div>
+          <div class="social-copy"><div class="social-title">Instagram｜Gray Pokerlife</div><div class="social-handle">@gray.pokerlife</div></div>
         </div>
         <div class="social-cta">追蹤</div>
       </a>
