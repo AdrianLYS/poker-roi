@@ -228,12 +228,137 @@
     .bad { color: var(--bad); }
     .warn { color: var(--warn); }
 
-    .chartbox { height: 280px; }
-
+    .chartbox { flex:1 1 auto; min-height:0; height:auto; }
+    .chart-card {
+      min-width:0;
+      height:var(--widget-height, 320px);
+      position:relative;
+      grid-column:span var(--widget-span, 1);
+      user-select:none;
+      touch-action:auto;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .chart-card > .chartbox { width:100%; }
+    .chart-card.widget-dragging { opacity:.55; transform:scale(.985); transition:opacity .12s ease, transform .12s ease; }
+    .sponsor-fields { display:none !important; }
+    .sponsor-fields.active { display:block !important; }
+    .hidden-by-type { display:none !important; }
+    .sponsor-direction {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      align-items:stretch;
+    }
+    .sponsor-direction label {
+      margin:0;
+      min-height:46px;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      background:#0b1424;
+      line-height:1.2;
+      cursor:pointer;
+      box-sizing:border-box;
+    }
+    .sponsor-direction input[type="radio"] {
+      width:18px;
+      height:18px;
+      margin:0;
+      flex:0 0 18px;
+      vertical-align:middle;
+    }
+    .chart-size-badge {
+      position:absolute; right:42px; bottom:9px; z-index:7;
+      padding:4px 7px; border-radius:8px; font-size:10px; font-weight:800;
+      color:var(--muted); background:rgba(20,22,25,.82); border:1px solid rgba(255,255,255,.10);
+      pointer-events:none; opacity:0; transition:opacity .12s ease;
+    }
+    .chart-card.widget-resizing .chart-size-badge { opacity:1; }
+    .chart-widget-handle {
+      position:absolute;
+      top:8px;
+      right:10px;
+      width:34px;
+      height:32px;
+      display:grid;
+      place-items:center;
+      padding:0;
+      border:0;
+      border-radius:10px;
+      color:rgba(238,242,247,.48);
+      background:transparent;
+      cursor:grab;
+      z-index:5;
+      touch-action:none;
+      transition:color .15s ease, background .15s ease;
+    }
+    .chart-widget-handle:hover {
+      color:rgba(255,255,255,.88);
+      background:rgba(255,255,255,.055);
+    }
+    .chart-widget-handle:active { cursor:grabbing; color:#fff; }
+    .chart-widget-handle svg { width:14px; height:20px; display:block; pointer-events:none; }
+    .chart-widget-resize {
+      position:absolute;
+      right:0;
+      bottom:0;
+      width:34px;
+      height:34px;
+      cursor:nwse-resize;
+      z-index:6;
+      touch-action:none;
+    }
+    .chart-widget-resize::after {
+      content:"";
+      position:absolute;
+      right:8px;
+      bottom:8px;
+      width:12px;
+      height:12px;
+      border-right:2px solid rgba(255,255,255,.38);
+      border-bottom:2px solid rgba(255,255,255,.38);
+      border-radius:1px;
+    }
+    .chart-widget-tip {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      padding:11px 13px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:rgba(255,255,255,.02);
+    }
+    .chart-widget-tip .actions { margin:0; }
     .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      align-items:start;
+    }
+    .chart-widget-ghost {
+      position:fixed;
+      z-index:9999;
+      pointer-events:none;
+      border:1px solid rgba(255,255,255,.22);
+      border-radius:16px;
+      background:rgba(42,45,49,.92);
+      box-shadow:0 18px 60px rgba(0,0,0,.35);
+      padding:14px;
+      font-weight:800;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      backdrop-filter:blur(10px);
     }
 
     .chart-toolbar {
@@ -306,6 +431,21 @@
     .nickname-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
     @media (max-width:600px) {
       h1 { font-size:17px; }
+      .formgrid > div { min-width:0; }
+      .formgrid input[type="date"],
+      .formgrid input[type="time"] {
+        display:block;
+        width:100%;
+        min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
+      }
+      .chart-layout-controls { align-items:flex-start; }
+      .chart-grid .panel { min-width:0; padding:12px; }
+      .chart-toolbar select { min-width:0; width:100%; max-width:100%; }
+      .chart-toolbar > div { min-width:0; width:100%; }
+      .chart-layout-controls .control-group { width:100%; }
+      .chart-layout-controls input[type="range"] { flex:1 1 150px; width:auto; min-width:120px; }
       .top { display:block; }
       .player-greeting { align-items:flex-start; padding:15px; }
       .greeting-line { font-size:20px; }
@@ -334,7 +474,15 @@
       .social-title { font-size:11px; }
       .social-handle { font-size:10px; }
       .social-cta { display:none; }
-      .chart-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .chart-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .chart-card { padding:12px; }
+      .chart-card h2 { font-size:16px; padding-right:36px; }
+      .chart-card .muted { font-size:11px; }
+      .chart-widget-handle { top:6px; right:7px; width:29px; height:26px; }
+      .chart-widget-tip { align-items:flex-start; }
     }
   </style>
 </head>
@@ -478,6 +626,14 @@
         <div class="label">總參賽次數</div>
         <div class="value" id="sCount">0</div>
       </div>
+      <div class="stat">
+        <div class="label">金主盈虧</div>
+        <div class="value" id="sSponsorProfit">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">包含金主盈虧的 Bankroll / 累積盈虧</div>
+        <div class="value" id="sCombinedProfit">0</div>
+      </div>
     </div>
 
     <div class="panel">
@@ -497,7 +653,7 @@
 
         <div>
           <label class="required">類型</label>
-          <select id="type" required>
+          <select id="type" required onchange="handleTypeChange()">
             <option value="">請選擇類型</option>
             <option value="錦標賽">錦標賽</option>
             <option value="現金局">現金局</option>
@@ -516,7 +672,7 @@
           </select>
         </div>
 
-        <div class="combo" id="seriesCombo">
+        <div class="combo normal-poker-field" id="seriesCombo">
           <label class="required">大賽名稱</label>
           <input id="series" placeholder="例如：APT（可自行輸入）" required autocomplete="off"
             oninput="handleComboInput('series')" onblur="handleHistoryAutoFill('series')" />
@@ -524,7 +680,7 @@
           <div class="combo-menu" id="recentSeries"></div>
         </div>
 
-        <div class="combo" id="nameCombo">
+        <div class="combo normal-poker-field" id="nameCombo">
           <label class="required">賽事名稱</label>
           <input id="name" placeholder="例如：Main Event（可自行輸入）" required autocomplete="off"
             oninput="handleComboInput('name')" onblur="handleHistoryAutoFill('name')" />
@@ -532,7 +688,7 @@
           <div class="combo-menu" id="recentNames"></div>
         </div>
 
-        <div>
+        <div class="normal-poker-field">
           <label class="required">Buy-in</label>
           <input
             id="buyin"
@@ -543,7 +699,7 @@
           />
         </div>
 
-        <div>
+        <div class="normal-poker-field">
           <label>Cash out</label>
           <input
             id="cashout"
@@ -553,17 +709,30 @@
           />
         </div>
 
-        <div>
+        <div class="sponsor-fields" id="sponsorDirectionField">
+          <label class="required">金主方向</label>
+          <div class="sponsor-direction">
+            <label><input type="radio" name="sponsorDirection" value="金主給我" checked /> 金主給我</label>
+            <label><input type="radio" name="sponsorDirection" value="我當金主給別人" /> 我當金主給別人</label>
+          </div>
+        </div>
+
+        <div class="sponsor-fields" id="sponsorAmountField">
+          <label class="required">金額</label>
+          <input id="sponsorAmount" type="text" inputmode="decimal" placeholder="輸入金主金額" oninput="updateTwdPreview()" />
+        </div>
+
+        <div class="normal-poker-field">
           <label>地點</label>
           <input id="location" />
         </div>
 
-        <div>
+        <div class="normal-poker-field">
           <label>開始時間</label>
           <input id="start" type="time" />
         </div>
 
-        <div>
+        <div class="normal-poker-field">
           <label>結束時間</label>
           <input id="end" type="time" />
         </div>
@@ -587,47 +756,84 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="toolbar">
-        <h2>累積盈虧曲線</h2>
-        <span class="pill" id="chartCurrency"></span>
+    <div class="chart-widget-tip">
+      <div>
+        <strong>曲線小組件</strong>
+        <div class="muted" style="margin-top:3px">拖右上角六點把手移動位置；拖右下角調整寬度與高度。版面會自動保存。</div>
       </div>
-
-      <div class="chartbox">
-        <canvas id="profitChart"></canvas>
+      <div class="actions">
+        <button class="secondary" type="button" onclick="resetChartWidgets()">重設版面</button>
       </div>
     </div>
 
-    <div class="chart-grid">
-      <div class="panel">
+    <div class="chart-grid" id="chartGrid">
+      <div class="panel chart-card">
+        <div class="toolbar">
+          <h2>累積盈虧曲線</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill chart-amount" id="overallChartAmount">0</span>
+            <span class="pill" id="chartCurrency"></span>
+          </div>
+        </div>
+        <div class="chartbox">
+          <canvas id="profitChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel chart-card">
         <div class="chart-toolbar">
           <div>
             <h2 style="margin-bottom:4px">單獨大賽盈虧曲線</h2>
             <div class="muted">選擇一個大賽查看累積盈虧</div>
           </div>
-          <select id="seriesChartSelect" onchange="drawBreakdownCharts()">
-            <option value="">尚無大賽資料</option>
-          </select>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill chart-amount" id="seriesChartAmount">0</span>
+            <select id="seriesChartSelect" onchange="drawBreakdownCharts()">
+              <option value="">尚無大賽資料</option>
+            </select>
+          </div>
         </div>
-
         <div class="chartbox">
           <canvas id="seriesProfitChart"></canvas>
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel chart-card">
         <div class="chart-toolbar">
           <div>
             <h2 style="margin-bottom:4px">單獨賽事盈虧曲線</h2>
-            <div class="muted">選擇一個賽事查看累積盈虧</div>
+            <div class="muted">跨所有大賽，查看同名賽事的累積盈虧</div>
           </div>
-          <select id="eventChartSelect" onchange="drawBreakdownCharts()">
-            <option value="">尚無賽事資料</option>
-          </select>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill chart-amount" id="eventChartAmount">0</span>
+            <select id="eventChartSelect" onchange="drawBreakdownCharts()">
+              <option value="">尚無賽事資料</option>
+            </select>
+          </div>
         </div>
-
         <div class="chartbox">
           <canvas id="eventProfitChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel chart-card">
+        <div class="chart-toolbar">
+          <div>
+            <h2 style="margin-bottom:4px">單獨大賽中的單獨賽事盈虧曲線</h2>
+            <div class="muted">先選大賽，再查看該大賽內指定賽事</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill chart-amount" id="seriesEventChartAmount">0</span>
+            <select id="seriesEventSeriesSelect" onchange="drawBreakdownCharts()">
+              <option value="">尚無大賽資料</option>
+            </select>
+            <select id="seriesEventEventSelect" onchange="drawBreakdownCharts()">
+              <option value="">尚無賽事資料</option>
+            </select>
+          </div>
+        </div>
+        <div class="chartbox">
+          <canvas id="seriesEventProfitChart"></canvas>
         </div>
       </div>
     </div>
@@ -678,6 +884,9 @@
           <tbody id="tbody"></tbody>
         </table>
       </div>
+      <div class="history-toggle">
+        <button class="secondary" id="historyToggleBtn" type="button" onclick="toggleHistoryExpanded()">展開全部紀錄</button>
+      </div>
     </div>
 
     <footer class="site-footer">
@@ -711,6 +920,7 @@
     preferences.recentSeries = preferences.recentSeries || [];
     preferences.lastName = preferences.lastName || "";
     preferences.lastSeries = preferences.lastSeries || "";
+    preferences.chartWidgets = preferences.chartWidgets || {};
 
     let fxCache = JSON.parse(
       localStorage.getItem(RATE_CACHE_KEY) || "{}"
@@ -721,8 +931,10 @@
     let chart = null;
     let seriesChart = null;
     let eventChart = null;
+    let seriesEventChart = null;
     let fxRequestToken = 0;
     let editingId = null;
+    let historyExpanded = false;
 
     const $ = (id) => document.getElementById(id);
 
@@ -771,6 +983,52 @@
       if (type === "Tournament") return "錦標賽";
       if (type === "Cash") return "現金局";
       return type || "錦標賽";
+    }
+
+    function isSponsorRecord(record) {
+      return normalizeType(record?.type) === "金主抖內😘";
+    }
+
+    function getSponsorDirection(record) {
+      if (record?.name === "金主給我" || record?.name === "我當金主給別人") return record.name;
+      return record?.sponsor_direction || "金主給我";
+    }
+
+    function getSponsorSignedAmount(record, useTwd = false) {
+      if (!isSponsorRecord(record)) return 0;
+      const direction = getSponsorDirection(record);
+      const base = useTwd
+        ? (record.currency === "TWD" ? Number(record.buyin || 0) : Number(record.buyin_twd || 0))
+        : Number(record.buyin || 0);
+      if (direction === "我當金主給別人") return -Math.abs(base);
+      if (direction === "金主給我") return Math.abs(base);
+      return Number(record.profit || 0);
+    }
+
+    function selectedSponsorDirection() {
+      return document.querySelector('input[name="sponsorDirection"]:checked')?.value || "金主給我";
+    }
+
+    function handleTypeChange() {
+      const sponsor = $("type")?.value === "金主抖內😘";
+      document.querySelectorAll(".normal-poker-field").forEach(el => el.classList.toggle("hidden-by-type", sponsor));
+      $("sponsorDirectionField")?.classList.toggle("active", sponsor);
+      $("sponsorAmountField")?.classList.toggle("active", sponsor);
+      if (sponsor) {
+        $("series").required = false;
+        $("name").required = false;
+        $("buyin").required = false;
+      } else {
+        $("series").required = true;
+        $("name").required = true;
+        $("buyin").required = true;
+      }
+      updateTwdPreview();
+    }
+
+    function toggleHistoryExpanded() {
+      historyExpanded = !historyExpanded;
+      render();
     }
 
     function norm(record) {
@@ -898,7 +1156,7 @@
       const sameSeriesNames = selectedSeries ? records
         .filter(r => String(r.series || "").trim().toLocaleLowerCase() === selectedSeries.toLocaleLowerCase())
         .map(r => r.name) : [];
-      let names = alphaSort([...sameSeriesNames, ...preferences.recentNames, ...records.map(r => r.name), ...EVENT_PRESETS]);
+      let names = alphaSort([...sameSeriesNames, ...preferences.recentNames, ...records.filter(r => !isSponsorRecord(r)).map(r => r.name), ...EVENT_PRESETS]);
       if (query) names = names.filter(v => v.toLocaleLowerCase().includes(query));
       list.innerHTML = names.length ? names.map(v => comboOptionHtml(v, "name")).join("") : '<div class="combo-empty">沒有相符選項，可直接自行輸入</div>';
     }
@@ -907,7 +1165,7 @@
       const list = $("recentSeries");
       if (!list) return;
       const query = $("series")?.value?.trim().toLocaleLowerCase() || "";
-      let values = alphaSort([...preferences.recentSeries, ...records.map(r => r.series), ...SERIES_PRESETS]);
+      let values = alphaSort([...preferences.recentSeries, ...records.filter(r => !isSponsorRecord(r)).map(r => r.series), ...SERIES_PRESETS]);
       if (query) values = values.filter(v => v.toLocaleLowerCase().includes(query));
       list.innerHTML = values.length ? values.map(v => comboOptionHtml(v, "series")).join("") : '<div class="combo-empty">沒有相符選項，可直接自行輸入</div>';
     }
@@ -983,8 +1241,9 @@
     function rememberPreferences(record) {
       const name = record.name?.trim();
       const series = record.series?.trim();
+      const sponsor = isSponsorRecord(record);
 
-      if (name) {
+      if (name && !sponsor) {
         preferences.recentNames = [
           name,
           ...preferences.recentNames.filter((item) => item !== name)
@@ -992,7 +1251,7 @@
         preferences.lastName = name;
       }
 
-      if (series) {
+      if (series && !sponsor) {
         preferences.recentSeries = [
           series,
           ...preferences.recentSeries.filter((item) => item !== series)
@@ -1188,6 +1447,7 @@
 
     async function init() {
       today();
+      initChartWidgets();
 
       renderRecentNames();
       renderRecentSeries();
@@ -1268,6 +1528,7 @@
         restoreSession(true);
       });
 
+      handleTypeChange();
       updateTwdPreview();
     }
 
@@ -1609,8 +1870,9 @@
       const token = ++fxRequestToken;
       const currency = $("currency").value;
       const date = $("date").value;
-      const buyinText = $("buyin").value;
-      const cashoutText = $("cashout").value;
+      const sponsor = $("type")?.value === "金主抖內😘";
+      const buyinText = sponsor ? $("sponsorAmount").value : $("buyin").value;
+      const cashoutText = sponsor ? "0" : $("cashout").value;
       const buyin = Number(buyinText || 0);
       const cashout = Number(cashoutText || 0);
 
@@ -1620,9 +1882,9 @@
       }
 
       if (currency === "TWD") {
-        preview.innerHTML =
-          `Buy-in：<b>NT$ ${money(buyin)}</b>　` +
-          `Cash out：<b>NT$ ${money(cashout)}</b>`;
+        preview.innerHTML = sponsor
+          ? `金主金額：<b>NT$ ${money(buyin)}</b>（${escapeHtml(selectedSponsorDirection())}）`
+          : `Buy-in：<b>NT$ ${money(buyin)}</b>　Cash out：<b>NT$ ${money(cashout)}</b>`;
         return;
       }
 
@@ -1649,8 +1911,9 @@
         preview.innerHTML =
           `臺灣銀行「現金賣出」1 ${escapeHtml(currency)} ≈ ` +
           `<b>NT$ ${money(rate)}</b> ${fallbackText}<br>` +
-          `Buy-in 約 <b>NT$ ${money(buyinTwd)}</b>　` +
-          `Cash out 約 <b>NT$ ${money(cashoutTwd)}</b>`;
+          (sponsor
+            ? `金主金額約 <b>NT$ ${money(buyinTwd)}</b>（${escapeHtml(selectedSponsorDirection())}）`
+            : `Buy-in 約 <b>NT$ ${money(buyinTwd)}</b>　Cash out 約 <b>NT$ ${money(cashoutTwd)}</b>`);
 
       } catch (error) {
         if (token !== fxRequestToken) return;
@@ -1661,45 +1924,31 @@
     }
 
     function validateRequiredFields() {
-      const requiredFields = [
-        ["date", "日期"],
-        ["type", "類型"],
-        ["currency", "幣別"],
-        ["series", "大賽名稱"],
-        ["name", "賽事名稱"],
-        ["buyin", "Buy-in"]
-      ];
+      const sponsor = $("type").value === "金主抖內😘";
+      const requiredFields = sponsor
+        ? [["date", "日期"], ["type", "類型"], ["currency", "幣別"], ["sponsorAmount", "金額"]]
+        : [["date", "日期"], ["type", "類型"], ["currency", "幣別"], ["series", "大賽名稱"], ["name", "賽事名稱"], ["buyin", "Buy-in"]];
 
       for (const [id, label] of requiredFields) {
         const element = $(id);
         const value = String(element.value ?? "").trim();
+        if (!value) { alert(`請輸入${label}`); element.focus(); return false; }
+      }
 
-        if (!value) {
-          alert(`請輸入${label}`);
-          element.focus();
-          return false;
+      if (sponsor) {
+        const amount = Number($("sponsorAmount").value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          alert("金主金額必須大於 0"); $("sponsorAmount").focus(); return false;
         }
+        return true;
       }
 
       const buyin = Number($("buyin").value);
-
-      if (!Number.isFinite(buyin) || buyin < 0) {
-        alert("Buy-in 必須是 0 或以上的數字");
-        $("buyin").focus();
-        return false;
-      }
-
+      if (!Number.isFinite(buyin) || buyin < 0) { alert("Buy-in 必須是 0 或以上的數字"); $("buyin").focus(); return false; }
       const cashoutText = $("cashout").value.trim();
-
-      if (
-        cashoutText &&
-        (!Number.isFinite(Number(cashoutText)) || Number(cashoutText) < 0)
-      ) {
-        alert("Cash out 必須是 0 或以上的數字");
-        $("cashout").focus();
-        return false;
+      if (cashoutText && (!Number.isFinite(Number(cashoutText)) || Number(cashoutText) < 0)) {
+        alert("Cash out 必須是 0 或以上的數字"); $("cashout").focus(); return false;
       }
-
       return true;
     }
 
@@ -1722,6 +1971,15 @@
       $("cashout").value = "";
       $("location").value = r.location || "";
       $("note").value = r.note || "";
+      if (isSponsorRecord(r)) {
+        $("sponsorAmount").value = r.buyin ?? "";
+        const dir = getSponsorDirection(r);
+        const radio = document.querySelector(`input[name="sponsorDirection"][value="${dir}"]`);
+        if (radio) radio.checked = true;
+      } else {
+        $("sponsorAmount").value = "";
+      }
+      handleTypeChange();
       flashAutoFill("type", "currency", "series", "name", "buyin", "location");
       renderRecentNames(); renderRecentSeries(); updateTwdPreview();
     }
@@ -1741,6 +1999,15 @@
       $("start").value = r.start || "";
       $("end").value = r.end || "";
       $("note").value = r.note || "";
+      if (isSponsorRecord(r)) {
+        $("sponsorAmount").value = r.buyin ?? "";
+        const dir = getSponsorDirection(r);
+        const radio = document.querySelector(`input[name="sponsorDirection"][value="${dir}"]`);
+        if (radio) radio.checked = true;
+      } else {
+        $("sponsorAmount").value = "";
+      }
+      handleTypeChange();
       $("saveRecordBtn").textContent = "✓ 儲存修改";
       $("cancelEditBtn").classList.remove("hidden");
       document.querySelector('.panel .toolbar h2')?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1757,6 +2024,7 @@
         $("end").value = "";
         $("cashout").value = "";
         $("note").value = "";
+        handleTypeChange();
         updateTwdPreview();
       }
     }
@@ -1766,17 +2034,18 @@
         return;
       }
 
+      const sponsor = $("type").value === "金主抖內😘";
       const record = norm({
         date: $("date").value,
         type: $("type").value,
         currency: $("currency").value,
-        name: $("name").value.trim(),
-        series: $("series").value.trim(),
+        name: sponsor ? selectedSponsorDirection() : $("name").value.trim(),
+        series: sponsor ? "" : $("series").value.trim(),
         location: $("location").value.trim(),
-        start: $("start").value,
-        end: $("end").value,
-        buyin: $("buyin").value,
-        cashout: $("cashout").value,
+        start: sponsor ? "" : $("start").value,
+        end: sponsor ? "" : $("end").value,
+        buyin: sponsor ? $("sponsorAmount").value : $("buyin").value,
+        cashout: sponsor ? 0 : $("cashout").value,
         note: $("note").value.trim()
       });
 
@@ -1873,6 +2142,7 @@
         "end",
         "buyin",
         "cashout",
+        "sponsorAmount",
         "note"
       ].forEach((id) => {
         $(id).value = "";
@@ -1883,6 +2153,7 @@
       $("type").value = preferences.lastType || "";
       $("currency").value = preferences.lastCurrency || "";
       $("start").value = getLocalTimeString();
+      handleTypeChange();
 
       updateTwdPreview();
     }
@@ -1951,30 +2222,33 @@
 
     function render() {
       const data = filtered();
+      const pokerData = data.filter(record => !isSponsorRecord(record));
+      const sponsorData = data.filter(isSponsorRecord);
       const tbody = $("tbody");
 
-      if (data.length) {
-        tbody.innerHTML = data.map((record) => {
-          const localProfitClass =
-            record.profit > 0
-              ? "good"
-              : record.profit < 0
-                ? "bad"
-                : "";
+      const historyRows = [...data].sort((a, b) => {
+        const dateCompare = String(b.date || "").localeCompare(String(a.date || ""));
+        if (dateCompare !== 0) return dateCompare;
+        return String(b.created_at || "").localeCompare(String(a.created_at || ""));
+      });
+      const visibleRows = historyExpanded ? historyRows : historyRows.slice(0, 5);
 
+      if (visibleRows.length) {
+        tbody.innerHTML = visibleRows.map((record) => {
+          const sponsor = isSponsorRecord(record);
+          const localProfit = sponsor ? getSponsorSignedAmount(record, false) : record.profit;
+          const localProfitClass = localProfit > 0 ? "good" : localProfit < 0 ? "bad" : "";
           let twdCell = "—";
 
-          if (record.currency === "TWD") {
-            twdCell =
-              `Buy-in NT$ ${money(record.buyin)}<br>` +
-              `Cash out NT$ ${money(record.cashout)}`;
-
+          if (sponsor) {
+            const twdSponsor = getSponsorSignedAmount(record, true);
+            twdCell = record.currency === "TWD"
+              ? `金主金額 NT$ ${money(Math.abs(record.buyin))}`
+              : (record.fx_rate ? `1 ${escapeHtml(record.currency)} = NT$ ${money(record.fx_rate)}<br>金主金額 NT$ ${money(Math.abs(record.buyin_twd))}<br><span class="muted">${escapeHtml(record.fx_rate_date || "")} 臺銀現金賣出</span>` : "—");
+          } else if (record.currency === "TWD") {
+            twdCell = `Buy-in NT$ ${money(record.buyin)}<br>Cash out NT$ ${money(record.cashout)}`;
           } else if (record.fx_rate) {
-            twdCell =
-              `1 ${escapeHtml(record.currency)} = NT$ ${money(record.fx_rate)}<br>` +
-              `Buy-in NT$ ${money(record.buyin_twd)}<br>` +
-              `Cash out NT$ ${money(record.cashout_twd)}<br>` +
-              `<span class="muted">${escapeHtml(record.fx_rate_date || "")} 臺銀現金賣出</span>`;
+            twdCell = `1 ${escapeHtml(record.currency)} = NT$ ${money(record.fx_rate)}<br>Buy-in NT$ ${money(record.buyin_twd)}<br>Cash out NT$ ${money(record.cashout_twd)}<br><span class="muted">${escapeHtml(record.fx_rate_date || "")} 臺銀現金賣出</span>`;
           }
 
           return `
@@ -1982,87 +2256,89 @@
               <td>${escapeHtml(record.date)}</td>
               <td>${escapeHtml(record.type)}</td>
               <td>${escapeHtml(currencyName(record.currency))}</td>
-              <td>${escapeHtml(record.series || "—")}</td>
-              <td>${escapeHtml(record.name)}</td>
-              <td>${money(record.buyin)}</td>
-              <td>${money(record.cashout)}</td>
+              <td>${sponsor ? "—" : escapeHtml(record.series || "—")}</td>
+              <td>${sponsor ? escapeHtml(getSponsorDirection(record)) : escapeHtml(record.name)}</td>
+              <td>${sponsor ? "—" : money(record.buyin)}</td>
+              <td>${sponsor ? "—" : money(record.cashout)}</td>
               <td>${escapeHtml(record.location || "—")}</td>
-              <td>${record.hours ? record.hours.toFixed(2) + "h" : "—"}</td>
+              <td>${sponsor ? "—" : (record.hours ? record.hours.toFixed(2) + "h" : "—")}</td>
               <td>${twdCell}</td>
-              <td class="${localProfitClass}">
-                ${record.profit >= 0 ? "+" : ""}${money(record.profit)}
-              </td>
-              <td>${pct(record.roi)}</td>
-              <td>${record.hours ? money(record.hourly) : "—"}</td>
-              <td>
-                <button class="secondary" onclick='editRecord(${JSON.stringify(record.id)})'>編輯</button>
-                <button class="danger" onclick='del(${JSON.stringify(record.id)})'>刪除</button>
-              </td>
-            </tr>
-          `;
+              <td class="${localProfitClass}">${localProfit >= 0 ? "+" : ""}${money(localProfit)}</td>
+              <td>${sponsor ? "—" : pct(record.roi)}</td>
+              <td>${sponsor ? "—" : (record.hours ? money(record.hourly) : "—")}</td>
+              <td><button class="secondary" onclick='editRecord(${JSON.stringify(record.id)})'>編輯</button> <button class="danger" onclick='del(${JSON.stringify(record.id)})'>刪除</button></td>
+            </tr>`;
         }).join("");
-
       } else {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="14" class="muted">目前沒有紀錄</td>
-          </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="14" class="muted">目前沒有紀錄</td></tr>`;
       }
 
-      const statsBasis = getStatsBasis(data);
+      const toggleBtn = $("historyToggleBtn");
+      if (toggleBtn) {
+        toggleBtn.classList.toggle("hidden", historyRows.length <= 5);
+        toggleBtn.textContent = historyExpanded ? "收合，只顯示最近 5 筆" : `展開全部紀錄（${historyRows.length} 筆）`;
+      }
 
-      let totalBuyin = 0;
-      let totalCashout = 0;
-      let totalProfit = 0;
-      let statPrefix = "";
-
+      const statsBasis = getStatsBasis(pokerData);
+      let totalBuyin = 0, totalCashout = 0, totalProfit = 0, statPrefix = "";
       if (statsBasis === "TWD") {
-        totalBuyin = data.reduce(
-          (sum, r) => sum + (r.currency === "TWD" ? r.buyin : r.buyin_twd),
-          0
-        );
-
-        totalCashout = data.reduce(
-          (sum, r) => sum + (r.currency === "TWD" ? r.cashout : r.cashout_twd),
-          0
-        );
-
+        totalBuyin = pokerData.reduce((sum, r) => sum + (r.currency === "TWD" ? r.buyin : r.buyin_twd), 0);
+        totalCashout = pokerData.reduce((sum, r) => sum + (r.currency === "TWD" ? r.cashout : r.cashout_twd), 0);
         totalProfit = totalCashout - totalBuyin;
         statPrefix = "NT$ ";
-
       } else if (statsBasis !== "MIXED") {
-        totalBuyin = data.reduce((sum, r) => sum + r.buyin, 0);
-        totalCashout = data.reduce((sum, r) => sum + r.cashout, 0);
+        totalBuyin = pokerData.reduce((sum, r) => sum + r.buyin, 0);
+        totalCashout = pokerData.reduce((sum, r) => sum + r.cashout, 0);
         totalProfit = totalCashout - totalBuyin;
-
       } else {
-        totalBuyin = data.reduce((sum, r) => sum + r.buyin, 0);
-        totalCashout = data.reduce((sum, r) => sum + r.cashout, 0);
+        totalBuyin = pokerData.reduce((sum, r) => sum + r.buyin, 0);
+        totalCashout = pokerData.reduce((sum, r) => sum + r.cashout, 0);
         totalProfit = totalCashout - totalBuyin;
       }
-$("sProfit").textContent =
-        `${statPrefix}${totalProfit >= 0 ? "+" : ""}${money(totalProfit)}`;
 
-      $("sBuyin").textContent =
-        `${statPrefix}${money(totalBuyin)}`;
+      $("sProfit").textContent = `${statPrefix}${totalProfit >= 0 ? "+" : ""}${money(totalProfit)}`;
+      $("sBuyin").textContent = `${statPrefix}${money(totalBuyin)}`;
+      $("sCashout").textContent = `${statPrefix}${money(totalCashout)}`;
+      $("sRoi").textContent = pct(totalBuyin ? (totalProfit / totalBuyin) * 100 : 0);
+      const winningSessions = pokerData.filter(record => record.profit > 0).length;
+      $("sWinRate").textContent = pct(pokerData.length ? (winningSessions / pokerData.length) * 100 : 0);
+      $("sCount").textContent = pokerData.length;
 
-      $("sCashout").textContent =
-        `${statPrefix}${money(totalCashout)}`;
+      const sponsorBasis = getStatsBasis(sponsorData);
+      const sponsorAllConvertible = sponsorData.length > 0 && sponsorData.every(r =>
+        r.currency === "TWD" || (Number(r.fx_rate) > 0 && Number.isFinite(Number(r.buyin_twd)))
+      );
+      const sponsorUseTwd = sponsorAllConvertible;
+      const sponsorProfit = sponsorData.reduce((sum, r) => sum + getSponsorSignedAmount(r, sponsorUseTwd), 0);
+      const sponsorPrefix = sponsorUseTwd ? "NT$ " : "";
+      $("sSponsorProfit").textContent = `${sponsorPrefix}${sponsorProfit >= 0 ? "+" : ""}${money(sponsorProfit)}`;
+      $("sSponsorProfit").className = `value ${sponsorProfit > 0 ? "good" : sponsorProfit < 0 ? "bad" : ""}`;
 
-      $("sRoi").textContent =
-        pct(totalBuyin ? (totalProfit / totalBuyin) * 100 : 0);
-const winningSessions = data.filter(
-        (record) => record.profit > 0
-      ).length;
+      const combinedRows = [...pokerData, ...sponsorData];
+      const allCombinedConvertible = combinedRows.length > 0 && combinedRows.every(r =>
+        r.currency === "TWD" || (Number(r.fx_rate) > 0 && Number.isFinite(Number(r.buyin_twd)))
+      );
+      let combinedDisplay = totalProfit;
+      let combinedPrefix = statPrefix;
+      if (allCombinedConvertible) {
+        const pokerTwdProfit = pokerData.reduce((sum, r) => sum + (r.currency === "TWD" ? Number(r.profit || 0) : Number(r.profit_twd || 0)), 0);
+        const sponsorTwdProfit = sponsorData.reduce((sum, r) => sum + getSponsorSignedAmount(r, true), 0);
+        combinedDisplay = pokerTwdProfit + sponsorTwdProfit;
+        combinedPrefix = "NT$ ";
+      } else if (pokerData.length === 0 && sponsorData.length) {
+        combinedDisplay = sponsorProfit;
+        combinedPrefix = sponsorPrefix;
+      } else if (sponsorData.length && statsBasis !== sponsorBasis) {
+        combinedDisplay = NaN;
+      } else {
+        combinedDisplay = totalProfit + sponsorProfit;
+      }
+      $("sCombinedProfit").textContent = Number.isFinite(combinedDisplay)
+        ? `${combinedPrefix}${combinedDisplay >= 0 ? "+" : ""}${money(combinedDisplay)}`
+        : "幣別混合，無法直接加總";
+      $("sCombinedProfit").className = `value ${Number.isFinite(combinedDisplay) && combinedDisplay > 0 ? "good" : Number.isFinite(combinedDisplay) && combinedDisplay < 0 ? "bad" : ""}`;
 
-      $("sWinRate").textContent =
-        pct(data.length ? (winningSessions / data.length) * 100 : 0);
-
-      $("sCount").textContent =
-        data.length;
-
-      draw(data, statsBasis);
+      draw(pokerData, statsBasis);
       drawBreakdownCharts();
     }
 
@@ -2096,6 +2372,12 @@ const winningSessions = data.filter(
       });
 
       const labels = sorted.map((record) => record.date);
+      const finalAmount = chartData.length ? chartData[chartData.length - 1] : 0;
+      const amountPrefix = statsBasis === "TWD" ? "NT$ " : "";
+      if ($("overallChartAmount")) {
+        $("overallChartAmount").textContent = `${amountPrefix}${finalAmount >= 0 ? "+" : ""}${money(finalAmount)}`;
+        $("overallChartAmount").className = `pill chart-amount ${finalAmount > 0 ? "good" : finalAmount < 0 ? "bad" : ""}`;
+      }
 
       if (statsBasis === "TWD") {
         $("chartCurrency").textContent =
@@ -2129,6 +2411,207 @@ const winningSessions = data.filter(
     }
 
 
+    function resizeAllCharts() {
+      [chart, seriesChart, eventChart, seriesEventChart].forEach((instance) => {
+        if (instance && typeof instance.resize === "function") instance.resize();
+      });
+    }
+
+    const CHART_WIDGET_DEFAULTS = {
+      profitChart: { span: 1, height: 320, order: 0 },
+      seriesProfitChart: { span: 1, height: 320, order: 1 },
+      eventProfitChart: { span: 1, height: 320, order: 2 },
+      seriesEventProfitChart: { span: 1, height: 320, order: 3 }
+    };
+    const CHART_WIDGET_HEIGHTS = [240, 320, 420, 520];
+
+    function getChartWidgetId(card) {
+      const canvas = card && card.querySelector("canvas");
+      return canvas ? canvas.id : "";
+    }
+
+    function chartWidgetTitle(card) {
+      return card?.querySelector("h2")?.textContent?.trim() || "盈虧曲線";
+    }
+
+    function nearestWidgetHeight(value) {
+      return CHART_WIDGET_HEIGHTS.reduce((best, h) =>
+        Math.abs(h - value) < Math.abs(best - value) ? h : best, CHART_WIDGET_HEIGHTS[0]);
+    }
+
+    function setWidgetSize(card, span, height, persist = false) {
+      const safeSpan = Number(span) === 2 ? 2 : 1;
+      const safeHeight = nearestWidgetHeight(Number(height) || 320);
+      card.dataset.span = String(safeSpan);
+      card.dataset.height = String(safeHeight);
+      card.style.setProperty("--widget-span", safeSpan);
+      card.style.setProperty("--widget-height", `${safeHeight}px`);
+      const badge = card.querySelector(".chart-size-badge");
+      if (badge) badge.textContent = `${safeSpan === 2 ? "寬版" : "半寬"} · ${safeHeight}px`;
+      requestAnimationFrame(resizeAllCharts);
+      if (persist) persistChartWidgets();
+    }
+
+    function persistChartWidgets() {
+      const grid = $("chartGrid");
+      if (!grid) return;
+      preferences.chartWidgets = preferences.chartWidgets || {};
+      [...grid.querySelectorAll(".chart-card")].forEach((card, index) => {
+        const id = getChartWidgetId(card);
+        if (!id) return;
+        preferences.chartWidgets[id] = {
+          span: Number(card.dataset.span) === 2 ? 2 : 1,
+          height: nearestWidgetHeight(parseInt(card.dataset.height || 320, 10)),
+          order: index
+        };
+      });
+      savePrefs();
+    }
+
+    function applyChartWidgetLayout() {
+      const grid = $("chartGrid");
+      if (!grid) return;
+      const saved = preferences.chartWidgets || {};
+      const cards = [...grid.querySelectorAll(".chart-card")];
+      cards.sort((a,b) => {
+        const ai = getChartWidgetId(a), bi = getChartWidgetId(b);
+        const ao = saved[ai]?.order ?? CHART_WIDGET_DEFAULTS[ai]?.order ?? 99;
+        const bo = saved[bi]?.order ?? CHART_WIDGET_DEFAULTS[bi]?.order ?? 99;
+        return ao - bo;
+      }).forEach(card => grid.appendChild(card));
+
+      cards.forEach(card => {
+        const id = getChartWidgetId(card);
+        const cfg = { ...(CHART_WIDGET_DEFAULTS[id] || {span:1,height:320}), ...(saved[id] || {}) };
+        setWidgetSize(card, cfg.span, cfg.height, false);
+      });
+    }
+
+    function resetChartWidgets() {
+      preferences.chartWidgets = {};
+      savePrefs();
+      applyChartWidgetLayout();
+    }
+
+    function initChartWidgets() {
+      const grid = $("chartGrid");
+      if (!grid || grid.dataset.widgetsReady === "1") return;
+      grid.dataset.widgetsReady = "1";
+
+      [...grid.querySelectorAll(".chart-card")].forEach(card => {
+        const drag = document.createElement("button");
+        drag.type = "button";
+        drag.className = "chart-widget-handle";
+        drag.setAttribute("aria-label", "拖動曲線位置");
+        drag.title = "按住拖動，重新排列";
+        drag.innerHTML = `<svg viewBox="0 0 14 20" aria-hidden="true"><circle cx="4" cy="4" r="1.5" fill="currentColor"/><circle cx="10" cy="4" r="1.5" fill="currentColor"/><circle cx="4" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="4" cy="16" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>`;
+        card.appendChild(drag);
+
+        const resize = document.createElement("div");
+        resize.className = "chart-widget-resize";
+        resize.setAttribute("aria-label", "拖動調整曲線大小");
+        resize.title = "拖動調整大小（會自動對齊）";
+        card.appendChild(resize);
+
+        const badge = document.createElement("div");
+        badge.className = "chart-size-badge";
+        card.appendChild(badge);
+
+        resize.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          card.classList.add("widget-resizing");
+          const startX = e.clientX, startY = e.clientY;
+          const startHeight = Number(card.dataset.height || 320);
+          const startSpan = Number(card.dataset.span) === 2 ? 2 : 1;
+          const gridRect = grid.getBoundingClientRect();
+          const halfWidth = Math.max(140, (gridRect.width - 14) / 2);
+          let previewSpan = startSpan;
+          let previewHeight = startHeight;
+
+          const move = (ev) => {
+            ev.preventDefault();
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            // Apple-widget-like snapping: only half/full width and four fixed heights.
+            previewSpan = dx > halfWidth * .22 ? 2 : dx < -halfWidth * .22 ? 1 : startSpan;
+            previewHeight = nearestWidgetHeight(startHeight + dy);
+            setWidgetSize(card, previewSpan, previewHeight, false);
+          };
+          const up = () => {
+            document.removeEventListener("pointermove", move, {capture:true});
+            document.removeEventListener("pointerup", up, {capture:true});
+            document.removeEventListener("pointercancel", up, {capture:true});
+            card.classList.remove("widget-resizing");
+            setWidgetSize(card, previewSpan, previewHeight, true);
+          };
+          document.addEventListener("pointermove", move, {capture:true, passive:false});
+          document.addEventListener("pointerup", up, {capture:true, once:true});
+          document.addEventListener("pointercancel", up, {capture:true, once:true});
+        });
+
+        drag.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = card.getBoundingClientRect();
+          const ghost = document.createElement("div");
+          ghost.className = "chart-widget-ghost";
+          ghost.textContent = chartWidgetTitle(card);
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${Math.min(rect.height, 110)}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          document.body.appendChild(ghost);
+          card.classList.add("widget-dragging");
+
+          const move = (ev) => {
+            ev.preventDefault();
+            ghost.style.left = `${Math.max(6, Math.min(window.innerWidth - rect.width - 6, ev.clientX - rect.width + 32))}px`;
+            ghost.style.top = `${Math.max(6, Math.min(window.innerHeight - 80, ev.clientY - 28))}px`;
+
+            // Do not cache the last target. After the dragged card is inserted before/after
+            // a card, the pointer can still be over the same target; we must re-evaluate
+            // which half of that target the pointer is on so left→right and right→left
+            // both work immediately.
+            const targets = document.elementsFromPoint(ev.clientX, ev.clientY);
+            const target = targets
+              .map(el => el.closest?.(".chart-card"))
+              .find(el => el && el !== card && el.parentElement === grid);
+
+            if (target) {
+              const tr = target.getBoundingClientRect();
+              const centerX = tr.left + tr.width / 2;
+              const centerY = tr.top + tr.height / 2;
+              const sameRow = ev.clientY >= tr.top && ev.clientY <= tr.bottom;
+              const before = sameRow ? ev.clientX < centerX : ev.clientY < centerY;
+              const reference = before ? target : target.nextSibling;
+
+              // Only touch the DOM when the requested position is actually different.
+              // This prevents jitter but still allows crossing the same target in either direction.
+              if (reference !== card && card.nextSibling !== reference) {
+                grid.insertBefore(card, reference);
+              }
+            }
+          };
+          const up = () => {
+            document.removeEventListener("pointermove", move, {capture:true});
+            document.removeEventListener("pointerup", up, {capture:true});
+            document.removeEventListener("pointercancel", up, {capture:true});
+            ghost.remove();
+            card.classList.remove("widget-dragging");
+            persistChartWidgets();
+            requestAnimationFrame(resizeAllCharts);
+          };
+          document.addEventListener("pointermove", move, {capture:true, passive:false});
+          document.addEventListener("pointerup", up, {capture:true, once:true});
+          document.addEventListener("pointercancel", up, {capture:true, once:true});
+        });
+      });
+
+      applyChartWidgetLayout();
+    }
+
+
     function getProfitInStatsBasis(record, statsBasis) {
       if (statsBasis === "TWD") {
         return Number(
@@ -2144,55 +2627,65 @@ const winningSessions = data.filter(
     function populateBreakdownSelectors(data) {
       const seriesSelect = $("seriesChartSelect");
       const eventSelect = $("eventChartSelect");
+      const comboSeriesSelect = $("seriesEventSeriesSelect");
+      const comboEventSelect = $("seriesEventEventSelect");
 
-      const seriesValues = [...new Set(
+      const seriesValues = alphaSort([...new Set(
         data.map((record) => record.series).filter(Boolean)
-      )];
+      )]);
 
-      const eventValues = [...new Set(
+      const eventValues = alphaSort([...new Set(
         data.map((record) => record.name).filter(Boolean)
-      )];
+      )]);
 
       const currentSeries = seriesSelect?.value || "";
       const currentEvent = eventSelect?.value || "";
+      const currentComboSeries = comboSeriesSelect?.value || "";
+      const currentComboEvent = comboEventSelect?.value || "";
 
-      if (seriesSelect) {
-        seriesSelect.innerHTML = seriesValues.length
-          ? seriesValues
-              .map((value) =>
-                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
-              )
-              .join("")
-          : '<option value="">尚無大賽資料</option>';
+      const fillSelect = (select, values, emptyText, preferred, fallbackPreference) => {
+        if (!select) return "";
+        select.innerHTML = values.length
+          ? values.map((value) =>
+              `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+            ).join("")
+          : `<option value="">${emptyText}</option>`;
 
-        if (seriesValues.includes(currentSeries)) {
-          seriesSelect.value = currentSeries;
-        } else if (
-          preferences.lastSeries &&
-          seriesValues.includes(preferences.lastSeries)
-        ) {
-          seriesSelect.value = preferences.lastSeries;
+        if (values.includes(preferred)) {
+          select.value = preferred;
+        } else if (fallbackPreference && values.includes(fallbackPreference)) {
+          select.value = fallbackPreference;
+        } else if (values.length) {
+          select.value = values[0];
         }
-      }
+        return select.value || "";
+      };
 
-      if (eventSelect) {
-        eventSelect.innerHTML = eventValues.length
-          ? eventValues
-              .map((value) =>
-                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
-              )
-              .join("")
-          : '<option value="">尚無賽事資料</option>';
+      fillSelect(seriesSelect, seriesValues, "尚無大賽資料", currentSeries, preferences.lastSeries);
+      fillSelect(eventSelect, eventValues, "尚無賽事資料", currentEvent, preferences.lastName);
 
-        if (eventValues.includes(currentEvent)) {
-          eventSelect.value = currentEvent;
-        } else if (
-          preferences.lastName &&
-          eventValues.includes(preferences.lastName)
-        ) {
-          eventSelect.value = preferences.lastName;
-        }
-      }
+      const activeComboSeries = fillSelect(
+        comboSeriesSelect,
+        seriesValues,
+        "尚無大賽資料",
+        currentComboSeries,
+        preferences.lastSeries
+      );
+
+      const comboEventValues = alphaSort([...new Set(
+        data
+          .filter((record) => record.series === activeComboSeries)
+          .map((record) => record.name)
+          .filter(Boolean)
+      )]);
+
+      fillSelect(
+        comboEventSelect,
+        comboEventValues,
+        "尚無賽事資料",
+        currentComboEvent,
+        preferences.lastName
+      );
     }
 
     function drawOneBreakdownChart(canvasId, oldChart, rows, label, statsBasis) {
@@ -2209,6 +2702,18 @@ const winningSessions = data.filter(
       });
 
       const labels = sorted.map((record) => record.date);
+      const finalAmount = chartData.length ? chartData[chartData.length - 1] : 0;
+      const amountId = ({
+        seriesProfitChart: "seriesChartAmount",
+        eventProfitChart: "eventChartAmount",
+        seriesEventProfitChart: "seriesEventChartAmount"
+      })[canvasId] || "";
+      const amountEl = $(amountId);
+      if (amountEl) {
+        const prefix = statsBasis === "TWD" ? "NT$ " : "";
+        amountEl.textContent = `${prefix}${finalAmount >= 0 ? "+" : ""}${money(finalAmount)}`;
+        amountEl.className = `pill chart-amount ${finalAmount > 0 ? "good" : finalAmount < 0 ? "bad" : ""}`;
+      }
 
       if (oldChart) oldChart.destroy();
 
@@ -2231,28 +2736,28 @@ const winningSessions = data.filter(
     }
 
     function drawBreakdownCharts() {
-      const data = filtered();
+      const data = filtered().filter(record => !isSponsorRecord(record));
       populateBreakdownSelectors(data);
 
       const statsBasis = getStatsBasis(data);
       const selectedSeries = $("seriesChartSelect")?.value || "";
       const selectedEvent = $("eventChartSelect")?.value || "";
+      const selectedComboSeries = $("seriesEventSeriesSelect")?.value || "";
+      const selectedComboEvent = $("seriesEventEventSelect")?.value || "";
 
-      const seriesRows = data.filter(
-        (record) => record.series === selectedSeries
-      );
-
-      const eventRows = data.filter(
-        (record) => record.name === selectedEvent
+      const seriesRows = data.filter((record) => record.series === selectedSeries);
+      const eventRows = data.filter((record) => record.name === selectedEvent);
+      const seriesEventRows = data.filter(
+        (record) =>
+          record.series === selectedComboSeries &&
+          record.name === selectedComboEvent
       );
 
       seriesChart = drawOneBreakdownChart(
         "seriesProfitChart",
         seriesChart,
         seriesRows,
-        selectedSeries
-          ? `${selectedSeries}｜累積盈虧`
-          : "大賽累積盈虧",
+        selectedSeries ? `${selectedSeries}｜累積盈虧` : "大賽累積盈虧",
         statsBasis
       );
 
@@ -2260,9 +2765,17 @@ const winningSessions = data.filter(
         "eventProfitChart",
         eventChart,
         eventRows,
-        selectedEvent
-          ? `${selectedEvent}｜累積盈虧`
-          : "賽事累積盈虧",
+        selectedEvent ? `${selectedEvent}｜累積盈虧` : "賽事累積盈虧",
+        statsBasis
+      );
+
+      seriesEventChart = drawOneBreakdownChart(
+        "seriesEventProfitChart",
+        seriesEventChart,
+        seriesEventRows,
+        selectedComboSeries && selectedComboEvent
+          ? `${selectedComboSeries}｜${selectedComboEvent}｜累積盈虧`
+          : "大賽內賽事累積盈虧",
         statsBasis
       );
     }
@@ -2305,28 +2818,31 @@ const winningSessions = data.filter(
         "匯率日期",
         "TWD Buy-in",
         "TWD Cash out",
-        "TWD 盈虧"
+        "TWD 盈虧",
+        "金主方向",
+        "金主金額"
       ];
 
-      const rows = filtered().map((record) => [
-        record.date,
-        record.type,
-        record.currency,
-        record.name,
-        record.series,
-        record.location,
-        record.hours,
-        record.buyin,
-        record.cashout,
-        record.profit,
-        record.roi,
-        record.hourly,
-        record.fx_rate,
-        record.fx_rate_date,
-        record.buyin_twd,
-        record.cashout_twd,
-        record.profit_twd
-      ]);
+      const rows = filtered().map((record) => {
+        const sponsor = isSponsorRecord(record);
+        return [
+          record.date, record.type, record.currency,
+          sponsor ? getSponsorDirection(record) : record.name,
+          sponsor ? "" : record.series, record.location,
+          sponsor ? "" : record.hours,
+          sponsor ? "" : record.buyin,
+          sponsor ? "" : record.cashout,
+          sponsor ? getSponsorSignedAmount(record, false) : record.profit,
+          sponsor ? "" : record.roi,
+          sponsor ? "" : record.hourly,
+          record.fx_rate, record.fx_rate_date,
+          sponsor ? "" : record.buyin_twd,
+          sponsor ? "" : record.cashout_twd,
+          sponsor ? getSponsorSignedAmount(record, true) : record.profit_twd,
+          sponsor ? getSponsorDirection(record) : "",
+          sponsor ? record.buyin : ""
+        ];
+      });
 
       const csv =
         "\uFEFF" +
@@ -2353,6 +2869,7 @@ const winningSessions = data.filter(
         .catch(() => {});
     }
 
+    document.querySelectorAll('input[name="sponsorDirection"]').forEach(el => el.addEventListener("change", updateTwdPreview));
     init();
   </script>
 
